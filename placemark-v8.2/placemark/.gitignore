@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+instance/
+*.sqlite
+*.sqlite-journal
+.chave_secreta
+backups/
+.env
+.claude/

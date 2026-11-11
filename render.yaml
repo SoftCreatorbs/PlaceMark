@@ -1,0 +1,25 @@
+# Configuração do Render (render.com → New → Blueprint → escolha este repositório)
+# Cria o site Placemark com um disco para o banco de dados não se perder.
+services:
+  - type: web
+    name: placemark
+    runtime: python
+    rootDir: placemark-v8.2/placemark
+    plan: starter            # o plano grátis não tem disco: o banco seria apagado a cada atualização
+    region: virginia
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT --workers 1 --threads 8 --timeout 60
+    autoDeploy: true         # cada envio ao GitHub atualiza o site sozinho
+    envVars:
+      - key: PRODUCAO        # liga as proteções de produção e desliga o pagamento simulado
+        value: "1"
+      - key: PROXY           # pega o IP real dos visitantes atrás do proxy do Render
+        value: "1"
+      - key: PLACEMARK_DB    # banco, chave secreta e backups ficam no disco
+        value: /var/data/placemark.sqlite
+      - key: PYTHON_VERSION
+        value: "3.12.8"
+    disk:
+      name: dados
+      mountPath: /var/data
+      sizeGB: 1
