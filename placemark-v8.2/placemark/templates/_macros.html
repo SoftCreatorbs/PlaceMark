@@ -1,0 +1,32 @@
+{% macro selo(status) -%}
+  {% set rotulos = {
+    'pendente': ('Aguardando', 'ambar'), 'aprovada': ('Aprovada', 'verde'),
+    'rejeitada': ('Rejeitada', 'rosa'), 'bloqueada': ('Bloqueada', 'cinza'),
+    'rascunho': ('Rascunho', 'cinza'), 'em_analise': ('Em análise', 'ambar'),
+    'publicado': ('Publicado', 'verde'), 'rejeitado': ('Rejeitado', 'rosa'),
+    'pago': ('Pago', 'verde'), 'solicitado': ('Na fila', 'ambar'), 'processando': ('Enviando', 'indigo'),
+    'falhou': ('Falhou', 'rosa'), 'cancelado': ('Cancelado', 'cinza'), 'reembolsado': ('Reembolsado', 'cinza'), 'recusado': ('Recusado', 'rosa'),
+    'mensal': ('Mensal', 'indigo'), 'vitalicio': ('Vitalício', 'verde'),
+    'aluno': ('Aluno', 'cinza'), 'empresa': ('Empresa', 'indigo'), 'admin': ('Admin', 'rosa'),
+  } %}
+  {% set r = rotulos.get(status, (status, 'cinza')) %}
+  <span class="selo-status s-{{ r[1] }}">{{ r[0] }}</span>
+{%- endmacro %}
+
+{% macro preco_curso(c) -%}
+  {% if c.preco_mensal and c.preco_vitalicio %}
+    <span class="preco">{{ c.preco_mensal|reais }}<small>/mês</small></span>
+  {% elif c.preco_mensal %}
+    <span class="preco">{{ c.preco_mensal|reais }}<small>/mês</small></span>
+  {% else %}
+    <span class="preco">{{ c.preco_vitalicio|reais }}<small> vitalício</small></span>
+  {% endif %}
+{%- endmacro %}
+
+{% macro filtros(base, atual, opcoes) -%}
+  <div class="abas">
+    {% for valor, rotulo in opcoes %}
+      <a href="{{ url_for(base, status=valor) }}" class="aba {{ 'ativa' if atual == valor }}">{{ rotulo }}</a>
+    {% endfor %}
+  </div>
+{%- endmacro %}

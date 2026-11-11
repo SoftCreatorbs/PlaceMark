@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% from "_macros.html" import selo %}
+{% block titulo %}{{ curso.titulo }}{% endblock %}
+{% block conteudo %}
+<a href="{{ url_for('cursos') }}" class="link-seta voltar">{{ ic("voltar") }} Todos os cursos</a>
+
+{% if curso.status != 'publicado' %}
+  <div class="alerta alerta-aviso">Pré-visualização: este curso está {{ selo(curso.status) }} e não aparece no catálogo.</div>
+{% endif %}
+
+<div class="detalhe tom-{{ tom(curso.id) }}">
+  <div class="detalhe-principal">
+    {% set item = curso %}{% set tamanho = 'banner' %}{% include "_capa.html" %}
+    <h1>{{ curso.titulo }}</h1>
+    <p class="por grande">por <strong>{{ curso.empresa_nome }}</strong></p>
+    <p class="lead">{{ curso.descricao }}</p>
+
+    <div class="info-grade">
+      <div class="info-item">{{ ic('aulas') }}<small>Aulas</small><strong>{{ curso.total_aulas }}</strong></div>
+      <div class="info-item">{{ ic('relogio') }}<small>Carga horária</small><strong>{{ curso.carga_horas }} horas</strong></div>
+      <div class="info-item">{{ ic('alunos') }}<small>Alunos</small><strong>{{ curso.total_alunos }}</strong></div>
+      <div class="info-item">{{ ic('certificado') }}<small>Certificado</small><strong>Incluso</strong></div>
+    </div>
+
+    {% if aulas %}
+    <h2 class="subtitulo">Conteúdo do curso</h2>
+    <ol class="lista-aulas">
+      {% for a in aulas %}<li><span>{{ loop.index }}</span>{{ a.titulo }}</li>{% endfor %}
+    </ol>
+    {% endif %}
+  </div>
+
+  <aside class="caixa-compra">
+    {% if acesso %}
+      <span class="selo-status s-verde">{{ ic("check") }} Você tem acesso</span>
+      <p class="nota esquerda">
+        {% if acesso.expira_em %}Plano mensal, válido até {{ acesso.expira_em[8:10] }}/{{ acesso.expira_em[5:7] }}/{{ acesso.expira_em[:4] }}.{% else %}Acesso vitalício.{% endif %}
+      </p>
+      <a href="{{ url_for('aluno.aprender', curso_id=curso.id) }}" class="btn btn-escuro btn-cheio">Ir para as aulas</a>
+    {% endif %}
+
+    {% if not acesso or acesso.expira_em %}
+      <small>{{ 'Escolha seu plano' if not acesso else 'Quer acesso para sempre?' }}</small>
+      <div class="planos">
+        {% if curso.preco_mensal and not acesso %}
+          <div class="plano">
+            <div><strong>Mensal</strong><span>Cancele quando quiser</span></div>
+            <div class="plano-preco">{{ curso.preco_mensal|reais }}<small>/mês</small></div>
+          </div>
+        {% endif %}
+        {% if curso.preco_vitalicio %}
+          <div class="plano destaque">
+            <div><strong>Vitalício</strong><span>Pague uma vez, acesse sempre</span></div>
+            <div class="plano-preco">{{ curso.preco_vitalicio|reais }}</div>
+          </div>
+        {% endif %}
+      </div>
+
+      {% if curso.status != 'publicado' %}
+        <button class="btn btn-escuro btn-cheio" disabled>Indisponível na pré-visualização</button>
+      {% elif not g.usuario %}
+        <a href="{{ url_for('auth.cadastro', proximo=request.path) }}" class="btn btn-escuro btn-cheio">Criar conta e comprar</a>
+        <p class="nota">Já tem conta? <a href="{{ url_for('auth.login', proximo=request.path) }}">Entrar</a></p>
+      {% elif g.usuario.papel != 'aluno' %}
+        <p class="nota">Compras são feitas com uma conta de aluno.</p>
+      {% else %}
+        <div class="botoes-plano">
+          {% if curso.preco_mensal and not acesso %}
+            <a href="{{ url_for('aluno.checkout', curso_id=curso.id, plano='mensal') }}" class="btn {{ 'btn-contorno' if curso.preco_vitalicio else 'btn-escuro' }} btn-cheio">Assinar mensal</a>
+          {% endif %}
+          {% if curso.preco_vitalicio %}
+            <a href="{{ url_for('aluno.checkout', curso_id=curso.id, plano='vitalicio') }}" class="btn btn-escuro btn-cheio">Comprar vitalício</a>
+          {% endif %}
+        </div>
+      {% endif %}
+    {% endif %}
+
+    <ul class="checks">
+      <li>Acesso imediato após o pagamento</li>
+      <li>Garantia de 7 dias</li>
+      <li>Certificado ao concluir</li>
+    </ul>
+  </aside>
+</div>
+{% endblock %}

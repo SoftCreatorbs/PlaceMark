@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block titulo %}Finalizar compra{% endblock %}
+{% block conteudo %}
+<a href="{{ url_for('curso', curso_id=curso.id) }}" class="link-seta voltar">{{ ic("voltar") }} Voltar ao curso</a>
+<div class="checkout">
+  <section class="checkout-form">
+    <h1>Finalizar compra</h1>
+    {% if modo == 'real' %}
+      {% if teste %}<div class="aviso-simulado"><strong>Modo teste</strong> Use os cartões e usuários de teste do Mercado Pago. Nenhuma cobrança real.</div>{% endif %}
+      <form method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <ul class="lista-checagem">
+          <li class="ok"><span class="marcador">{{ ic('escudo') }}</span><div><strong>Pagamento seguro pelo Mercado Pago</strong><small>Pix, cartão de crédito ou boleto. Você escolhe na próxima tela.</small></div></li>
+          <li class="ok"><span class="marcador">{{ ic('check') }}</span><div><strong>Acesso liberado sozinho</strong><small>Assim que o pagamento for aprovado, o curso aparece em Meus cursos.</small></div></li>
+        </ul>
+        <button class="btn btn-escuro btn-cheio">Ir para o pagamento · {{ valor|reais }}</button>
+        <p class="nota">Ao continuar, você concorda com os termos de uso e a política de reembolso de 7 dias.</p>
+      </form>
+    {% elif modo == 'indisponivel' %}
+      <div class="estado-vazio"><strong>Compra indisponível no momento</strong><p>O vendedor deste curso ainda não ativou os pagamentos. Volte mais tarde.</p></div>
+    {% else %}
+    <div class="aviso-simulado">
+      <strong>Modo de teste</strong> Nenhuma cobrança real será feita. Configure o Mercado Pago em Admin → Mercado Pago para cobrar de verdade.
+    </div>
+
+    <form method="post">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <fieldset class="metodos">
+        <legend>Forma de pagamento</legend>
+        <label class="metodo">
+          <input type="radio" name="metodo" value="pix" checked>
+          <span><strong>Pix</strong><small>Aprovação na hora</small></span>
+        </label>
+        <label class="metodo">
+          <input type="radio" name="metodo" value="cartao">
+          <span><strong>Cartão de crédito</strong><small>À vista</small></span>
+        </label>
+      </fieldset>
+      <button class="btn btn-escuro btn-cheio">Pagar {{ valor|reais }} (simulado)</button>
+      <p class="nota">Ao continuar, você concorda com os termos de uso e a política de reembolso de 7 dias.</p>
+    </form>
+    {% endif %}
+  </section>
+
+  <aside class="resumo tom-{{ tom(curso.id) }}">
+    <small>Resumo do pedido</small>
+    <div class="resumo-curso">
+      <span class="monograma">{{ iniciais(curso.titulo) }}</span>
+      <div><strong>{{ curso.titulo }}</strong><span>por {{ curso.empresa_nome }}</span></div>
+    </div>
+    <div class="ticket-linha"><span>Plano</span><span>{{ 'Mensal' if plano == 'mensal' else 'Vitalício' }}</span></div>
+    {% if plano == 'mensal' %}
+      <div class="ticket-linha"><span>Período</span><span>30 dias{% if acesso_atual and acesso_atual.expira_em %} (renovação){% endif %}</span></div>
+    {% endif %}
+    <div class="ticket-linha total"><span>Total</span><span>{{ valor|reais }}{% if plano == 'mensal' %}<small>/mês</small>{% endif %}</span></div>
+  </aside>
+</div>
+{% endblock %}

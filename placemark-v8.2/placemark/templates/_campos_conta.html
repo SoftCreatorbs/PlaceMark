@@ -1,0 +1,25 @@
+<div class="campo">
+  <label for="nome">{{ rotulo_nome or 'Nome completo' }}</label>
+  <input id="nome" name="nome" value="{{ dados.nome }}" required autocomplete="name" placeholder="Seu nome">
+</div>
+<div class="campo">
+  <label for="email">E-mail</label>
+  <input id="email" name="email" type="email" value="{{ dados.email }}" required autocomplete="email" placeholder="voce@email.com">
+</div>
+<div class="campo">
+  <label for="telefone">Telefone <span class="opcional">opcional</span></label>
+  <input id="telefone" name="telefone" type="tel" value="{{ dados.telefone }}" placeholder="(67) 99999-9999" autocomplete="tel">
+</div>
+<div class="campos-duplos">
+  <div class="campo">
+    <label for="senha">Senha</label>
+    <div class="campo-senha">
+      <input id="senha" name="senha" type="password" required minlength="8" autocomplete="new-password" placeholder="Mín. 8, letras e números">
+      <button type="button" class="olho" data-olho="senha" aria-label="Mostrar senha"><svg class="ic" aria-hidden="true"><use href="#i-olho"></use></svg></button>
+    </div>
+  </div>
+  <div class="campo">
+    <label for="confirma">Confirme a senha</label>
+    <input id="confirma" name="confirma" type="password" required autocomplete="new-password" placeholder="Repita a senha">
+  </div>
+</div>

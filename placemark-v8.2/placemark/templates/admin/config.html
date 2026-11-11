@@ -1,0 +1,14 @@
+{% extends "admin/_base.html" %}
+{% block titulo %}Configurações · Admin{% endblock %}
+{% block painel %}
+<header class="painel-cabecalho"><div><h1>Configurações</h1><p>Regras gerais da plataforma.</p></div></header>
+<form method="post" class="painel-card form-painel estreito">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <div class="campo">
+    <label for="comissao_percentual">Comissão por venda</label>
+    <div class="campo-preco largo"><input id="comissao_percentual" name="comissao_percentual" type="number" min="0" max="50" value="{{ comissao }}"><span>%</span></div>
+    <small class="ajuda">Vale para as próximas vendas. Vendas antigas mantêm a comissão da época.</small>
+  </div>
+  <div class="form-rodape"><button class="btn btn-escuro">Salvar</button></div>
+</form>
+{% endblock %}

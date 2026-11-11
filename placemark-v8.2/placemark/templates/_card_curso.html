@@ -1,0 +1,26 @@
+<a href="{{ url_for('curso', curso_id=c.id) }}" class="card-curso tom-{{ tom(c.id) }}">
+  {% set item = c %}{% set tamanho = '' %}
+  <div class="card-capa">{% include "_capa.html" %}</div>
+  <div class="card-corpo">
+    <p class="por">{% if c.empresa_oficial %}{{ ic('escudo', 'oficial') }}{% endif %}{{ c.empresa_nome }}</p>
+    <h3>{{ c.titulo }}</h3>
+    <p class="desc">{{ c.descricao }}</p>
+    <ul class="meta-icones">
+      <li>{{ ic('aulas') }}{{ c.total_aulas }} aula{{ 's' if c.total_aulas != 1 }}</li>
+      {% if c.carga_horas %}<li>{{ ic('relogio') }}{{ c.carga_horas }}h</li>{% endif %}
+      {% if c.total_alunos %}<li>{{ ic('alunos') }}{{ c.total_alunos }}</li>{% endif %}
+    </ul>
+    <div class="card-rodape">
+      <div class="card-preco">
+        {% if c.preco_mensal %}
+          <small>{{ 'A partir de' if c.preco_vitalicio else 'Assinatura' }}</small>
+          <strong>{{ c.preco_mensal|reais }}<span>/mês</span></strong>
+        {% else %}
+          <small>Acesso vitalício</small>
+          <strong>{{ c.preco_vitalicio|reais }}</strong>
+        {% endif %}
+      </div>
+      <span class="seta" aria-hidden="true">{{ ic('seta') }}</span>
+    </div>
+  </div>
+</a>

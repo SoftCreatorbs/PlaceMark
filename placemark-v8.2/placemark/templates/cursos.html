@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% block titulo %}Cursos{% endblock %}
+{% block conteudo %}
+<header class="catalogo-topo">
+  <span class="sobre">Catálogo</span>
+  <h1>Encontre seu próximo curso</h1>
+  <p>{{ contagem.values()|sum }} cursos de escolas e especialistas, por assinatura ou acesso vitalício.</p>
+
+  <form class="busca-grande" method="get" role="search">
+    {{ ic('busca', 'busca-icone') }}
+    <input type="search" name="q" value="{{ busca }}" placeholder="Buscar cursos..." aria-label="Buscar cursos" autocomplete="off">
+    {% for c in cats %}<input type="hidden" name="cat" value="{{ c }}">{% endfor %}
+    {% if preco %}<input type="hidden" name="preco" value="{{ preco }}">{% endif %}
+    {% if acesso %}<input type="hidden" name="acesso" value="{{ acesso }}">{% endif %}
+    {% if ordem != 'relevancia' %}<input type="hidden" name="ordem" value="{{ ordem }}">{% endif %}
+    {% if busca %}<a href="{{ url_sem_busca }}" class="busca-limpar" aria-label="Limpar busca">{{ ic('x') }}</a>{% endif %}
+    <button class="btn btn-escuro" aria-label="Buscar"><span class="so-desktop">Buscar</span>{{ ic('seta', 'so-mobile') }}</button>
+  </form>
+</header>
+
+<div class="barra-catalogo">
+  <button type="button" class="btn-filtro {{ 'tem-filtro' if total_filtros }}" data-abrir="filtros" aria-haspopup="dialog">
+    {{ ic('filtro') }} Filtrar
+    {% if total_filtros %}<span class="contador">{{ total_filtros }}</span>{% endif %}
+  </button>
+  <div class="chips">
+    {% if busca %}<a href="{{ url_sem_busca }}" class="chip-filtro">“{{ busca }}” {{ ic('x') }}</a>{% endif %}
+    {% for rotulo, url in chips %}<a href="{{ url }}" class="chip-filtro">{{ rotulo }} {{ ic('x') }}</a>{% endfor %}
+    {% if chips or busca %}<a href="{{ url_for('cursos') }}" class="limpar-tudo">Limpar tudo</a>{% endif %}
+  </div>
+  <span class="contagem">
+    {{ cursos|length }} resultado{{ 's' if cursos|length != 1 }}
+    {% if ordem != 'relevancia' %}· {{ (ordens|selectattr(0, 'equalto', ordem)|first)[1] }}{% endif %}
+  </span>
+</div>
+
+<div class="grade">
+  {% for c in cursos %}
+    {% include "_card_curso.html" %}
+  {% else %}
+    <div class="estado-vazio largo">
+      <span class="estado-icone">{{ ic('busca') }}</span>
+      <strong>Nenhum curso com esses filtros</strong>
+      <p>Tente tirar algum filtro ou buscar por outra palavra.</p>
+      <a href="{{ url_for('cursos') }}" class="btn btn-contorno btn-peq">Limpar filtros</a>
+    </div>
+  {% endfor %}
+</div>
+
+{# ---------- Painel de filtros (gaveta) ---------- #}
+<dialog class="gaveta" id="filtros" aria-labelledby="titulo-filtros">
+  <form method="get" class="gaveta-form">
+    <header class="gaveta-topo">
+      <h2 id="titulo-filtros">Filtrar cursos</h2>
+      <button type="button" class="gaveta-fechar" data-fechar aria-label="Fechar">{{ ic('x') }}</button>
+    </header>
+    {% if busca %}<input type="hidden" name="q" value="{{ busca }}">{% endif %}
+
+    <div class="gaveta-corpo">
+      <details class="secao-filtro" {{ 'open' if cats or not (preco or acesso) }}>
+        <summary>{{ ic('grade') }}<span>Categorias</span>{% if cats %}<em>{{ cats|length }}</em>{% endif %}{{ ic('chevron', 'seta-acordeao') }}</summary>
+        <div class="opcoes-pilula">
+          {% for cat in categorias %}
+            {% set n = contagem.get(cat, 0) %}
+            <label class="pilula {{ 'vazia' if not n }}">
+              <input type="checkbox" name="cat" value="{{ cat }}" {{ 'checked' if cat in cats }}>
+              <span>{{ ic('check', 'marca') }}{{ cat }}<small>{{ n }}</small></span>
+            </label>
+          {% endfor %}
+        </div>
+      </details>
+
+      <details class="secao-filtro" {{ 'open' if preco }}>
+        <summary>{{ ic('moeda') }}<span>Preço</span>{% if preco %}<em>1</em>{% endif %}{{ ic('chevron', 'seta-acordeao') }}</summary>
+        <div class="opcoes-lista">
+          <label class="opcao"><input type="radio" name="preco" value="" {{ 'checked' if not preco }}><span>Qualquer preço</span></label>
+          {% for chave, faixa in faixas.items() %}
+            <label class="opcao"><input type="radio" name="preco" value="{{ chave }}" {{ 'checked' if preco == chave }}><span>{{ faixa[0] }}</span></label>
+          {% endfor %}
+        </div>
+      </details>
+
+      <details class="secao-filtro" {{ 'open' if acesso }}>
+        <summary>{{ ic('calendario') }}<span>Tipo de acesso</span>{% if acesso %}<em>1</em>{% endif %}{{ ic('chevron', 'seta-acordeao') }}</summary>
+        <div class="segmentado">
+          <label><input type="radio" name="acesso" value="" {{ 'checked' if not acesso }}><span>Todos</span></label>
+          <label><input type="radio" name="acesso" value="mensal" {{ 'checked' if acesso == 'mensal' }}><span>{{ ic('calendario') }} Mensal</span></label>
+          <label><input type="radio" name="acesso" value="vitalicio" {{ 'checked' if acesso == 'vitalicio' }}><span>{{ ic('infinito') }} Vitalício</span></label>
+        </div>
+      </details>
+
+      <details class="secao-filtro" {{ 'open' if ordem != 'relevancia' }}>
+        <summary>{{ ic('ordenar') }}<span>Ordenar por</span>{{ ic('chevron', 'seta-acordeao') }}</summary>
+        <div class="opcoes-lista">
+          {% for valor, rotulo in ordens %}
+            <label class="opcao"><input type="radio" name="ordem" value="{{ valor }}" {{ 'checked' if ordem == valor }}><span>{{ rotulo }}</span></label>
+          {% endfor %}
+        </div>
+      </details>
+    </div>
+
+    <footer class="gaveta-rodape">
+      <a href="{{ url_for('cursos', q=busca or None) }}" class="btn btn-contorno">Limpar</a>
+      <button class="btn btn-escuro">Ver resultados</button>
+    </footer>
+  </form>
+</dialog>
+{% endblock %}

@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% from "_icones.html" import icone %}
+{% block titulo %}Instalação{% endblock %}
+{% block main_class %}auth{% endblock %}
+{% block conteudo %}
+<div class="auth-grade">
+  <aside class="auth-lado" aria-hidden="true">
+    <div class="auth-lado-conteudo">
+      <span class="logo claro">{{ marca() }}<span class="logo-nome">placemark</span></span>
+      <h2>Bem-vindo. Vamos deixar tudo pronto em 1 minuto.</h2>
+      <ul class="checks claro">
+        <li>O banco de dados já foi criado sozinho</li>
+        <li>Crie agora a conta de administrador</li>
+        <li>Esta tela só aparece uma vez</li>
+      </ul>
+    </div>
+  </aside>
+  <section class="auth-form">
+    <span class="sobre">{{ icone('brilho') }} Primeira execução</span>
+    <h1>Criar administrador</h1>
+    <p class="sub">Essa será a conta da sua equipe para aprovar vendedores, editar planos e ver as vendas.</p>
+    <form method="post" novalidate>
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      {% include "_campos_conta.html" %}
+      <label class="check bloco">
+        <input type="checkbox" name="exemplo" value="1" checked>
+        <span><strong>Criar dados de exemplo</strong><small>Um vendedor de teste com 4 cursos (empresa@demo.com / Demo1234). Desmarque para começar vazio.</small></span>
+      </label>
+      <button class="btn btn-escuro btn-cheio">Concluir instalação</button>
+      <p class="nota">Seus dados ficam salvos em <code>{{ caminho_banco }}</code>, fora da pasta do site. Atualizar o site não apaga nada.</p>
+    </form>
+  </section>
+</div>
+{% endblock %}

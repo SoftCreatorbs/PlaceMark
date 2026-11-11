@@ -1,0 +1,61 @@
+{% extends "empresa/_base.html" %}
+{% from "_macros.html" import selo %}
+{% block titulo %}Aulas · {{ curso.titulo }}{% endblock %}
+{% block painel %}
+<a href="{{ url_for('empresa.cursos') }}" class="link-seta voltar">{{ ic("voltar") }} Meus cursos</a>
+<header class="painel-cabecalho">
+  <div>
+    <h1>{{ curso.titulo }}</h1>
+    <p>{{ selo(curso.status) }} · {{ aulas|length }} aula{{ 's' if aulas|length != 1 }}</p>
+  </div>
+  {% if curso.status in ('rascunho', 'rejeitado') %}
+    <form method="post" action="{{ url_for('empresa.enviar_analise', curso_id=curso.id) }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button class="btn btn-escuro btn-peq" {{ 'disabled' if not aulas }}>{{ 'Publicar' if g.empresa.oficial else 'Enviar para análise' }}</button>
+    </form>
+  {% endif %}
+</header>
+
+<div class="painel-grade">
+  <section class="painel-card">
+    <h2>Aulas do curso</h2>
+    {% if aulas %}
+      <ol class="lista-aulas editavel">
+        {% for a in aulas %}
+          <li>
+            <span>{{ loop.index }}</span>
+            <div class="aula-info"><strong>{{ a.titulo }}</strong><small>{{ 'Com vídeo' if a.video_url else 'Só texto' }}</small></div>
+            <form method="post" action="{{ url_for('empresa.excluir_aula', aula_id=a.id) }}" data-confirmar>
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button class="botao-texto perigo">Excluir</button>
+            </form>
+          </li>
+        {% endfor %}
+      </ol>
+    {% else %}
+      <div class="estado-vazio"><strong>Nenhuma aula ainda</strong><p>Adicione a primeira aula ao lado.</p></div>
+    {% endif %}
+  </section>
+
+  <section class="painel-card">
+    <h2>Adicionar aula</h2>
+    <form method="post" novalidate>
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="campo">
+        <label for="titulo">Título da aula</label>
+        <input id="titulo" name="titulo" required placeholder="Ex.: Introdução">
+      </div>
+      <div class="campo">
+        <label for="video_url">Link do vídeo <span class="opcional">YouTube ou Vimeo</span></label>
+        <input id="video_url" name="video_url" type="url" placeholder="https://youtube.com/watch?v=...">
+        <small class="ajuda">Dica: no YouTube, envie o vídeo como "Não listado".</small>
+      </div>
+      <div class="campo">
+        <label for="conteudo">Texto da aula <span class="opcional">opcional</span></label>
+        <textarea id="conteudo" name="conteudo" rows="4" placeholder="Resumo, links de material, exercícios..."></textarea>
+      </div>
+      <button class="btn btn-escuro btn-cheio">Adicionar aula</button>
+    </form>
+  </section>
+</div>
+{% endblock %}

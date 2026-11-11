@@ -1,0 +1,18 @@
+{% extends "_painel_base.html" %}
+{% block area %}Administração{% endblock %}
+{% block area_nome %}Equipe Placemark{% endblock %}
+{% block menu_lateral %}
+  {% set ep = request.endpoint %}
+  <a href="{{ url_for('admin.dashboard') }}" class="{{ 'ativo' if ep == 'admin.dashboard' }}">Visão geral</a>
+  <a href="{{ url_for('admin.empresas') }}" class="{{ 'ativo' if ep == 'admin.empresas' }}">Vendedores</a>
+  <a href="{{ url_for('admin.cursos') }}" class="{{ 'ativo' if ep == 'admin.cursos' }}">Cursos</a>
+  <a href="{{ url_for('admin.usuarios') }}" class="{{ 'ativo' if ep == 'admin.usuarios' }}">Usuários</a>
+  <a href="{{ url_for('admin.planos') }}" class="{{ 'ativo' if ep == 'admin.planos' }}">Planos</a>
+  <a href="{{ url_for('admin.vendas') }}" class="{{ 'ativo' if ep == 'admin.vendas' }}">Vendas</a>
+  <a href="{{ url_for('saque.admin_lista') }}" class="{{ 'ativo' if ep == 'saque.admin_lista' }}">Saques</a>
+  <a href="{{ url_for('mp.admin_config') }}" class="{{ 'ativo' if ep == 'mp.admin_config' }}">Mercado Pago</a>
+  <a href="{{ url_for('admin.config') }}" class="{{ 'ativo' if ep == 'admin.config' }}">Configurações</a>
+  <a href="{{ url_for('admin.seguranca_painel') }}" class="{{ 'ativo' if ep == 'admin.seguranca_painel' }}">{{ ic('escudo') }} Segurança</a>
+  <a href="{{ url_for('auth.trocar_senha') }}">Minha senha</a>
+  <a href="{{ url_for('empresa.dashboard') }}" class="lateral-acao">Loja oficial: meus cursos {{ ic("seta") }}</a>
+{% endblock %}

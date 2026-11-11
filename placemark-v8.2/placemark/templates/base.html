@@ -1,0 +1,121 @@
+{% from "_icones.html" import sprite %}<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block titulo %}Cursos online{% endblock %} · Placemark</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
+  <meta name="theme-color" content="#080b16">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  {{ sprite() }}
+  <header class="topo">
+    <div class="container topo-inner">
+      <a href="{{ url_for('inicio') }}" class="logo" aria-label="Placemark, página inicial">
+        {{ marca() }}
+        <span class="logo-nome">placemark</span>
+      </a>
+      {% set ep = request.endpoint or '' %}
+      {% if ep not in ('instalar', 'cursos') %}
+        <form action="{{ url_for('cursos') }}" method="get" class="busca-topo" role="search">
+          {{ ic('busca') }}
+          <input type="search" name="q" placeholder="Buscar cursos, temas ou escolas" aria-label="Buscar cursos" autocomplete="off">
+        </form>
+      {% endif %}
+      <nav class="menu">
+        {% if ep == 'instalar' %}
+          <span class="menu-link">Instalação</span>
+        {% elif not g.usuario %}
+          <a href="{{ url_for('cursos') }}" class="menu-link icone-mobile {{ 'ativo' if ep in ('cursos', 'curso') }}" aria-label="Cursos">{{ ic('busca', 'so-mobile') }}<span class="so-desktop">Cursos</span></a>
+          <a href="{{ url_for('vender') }}" class="menu-link esconder-mobile {{ 'ativo' if ep == 'vender' }}">Vender cursos</a>
+          <a href="{{ url_for('auth.login') }}" class="menu-link {{ 'ativo' if ep == 'auth.login' }}">Entrar</a>
+          <a href="{{ url_for('auth.cadastro') }}" class="btn btn-escuro btn-peq">Criar conta</a>
+        {% else %}
+          {% if g.usuario.papel == 'aluno' %}
+            <a href="{{ url_for('cursos') }}" class="menu-link {{ 'ativo' if ep in ('cursos', 'curso') }}">Cursos</a>
+            <a href="{{ url_for('aluno.meus_cursos') }}" class="menu-link {{ 'ativo' if ep.startswith('aluno.') }}">Meus cursos</a>
+          {% elif g.usuario.papel == 'empresa' %}
+            <a href="{{ url_for('empresa.dashboard') }}" class="menu-link {{ 'ativo' if ep.startswith('empresa.') }}">Meu painel</a>
+          {% else %}
+            <a href="{{ url_for('cursos') }}" class="menu-link esconder-mobile {{ 'ativo' if ep in ('cursos', 'curso') }}">Catálogo</a>
+            <a href="{{ url_for('admin.dashboard') }}" class="menu-link {{ 'ativo' if ep.startswith('admin.') }}">Admin</a>
+            <a href="{{ url_for('empresa.dashboard') }}" class="menu-link esconder-mobile {{ 'ativo' if ep.startswith('empresa.') }}">Loja oficial</a>
+          {% endif %}
+          <form action="{{ url_for('auth.sair') }}" method="post" class="inline">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="menu-link botao-link">Sair</button>
+          </form>
+          <span class="avatar papel-{{ g.usuario.papel }}" title="{{ g.usuario.nome }}">{{ g.usuario.nome[0]|upper }}</span>
+        {% endif %}
+      </nav>
+    </div>
+  </header>
+
+  <main class="{% block main_class %}container conteudo{% endblock %}">
+    {% with mensagens = get_flashed_messages(with_categories=true) %}
+      {% if mensagens %}
+        <div class="alertas">
+          {% for categoria, msg in mensagens %}
+            <div class="alerta alerta-{{ categoria }}" role="status">{{ msg }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+    {% block conteudo %}{% endblock %}
+  </main>
+
+  <footer class="rodape">
+    <div class="container rodape-inner">
+      <span class="logo pequeno">{{ marca() }}<span class="logo-nome">placemark</span></span>
+      <span><a href="{{ url_for('vender') }}">Venda seus cursos</a> · © 2026</span>
+    </div>
+  </footer>
+
+  <script nonce="{{ csp_nonce() }}">
+    // Mostrar/ocultar senha (troca o ícone do olho)
+    document.querySelectorAll('[data-olho]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var input = document.getElementById(b.dataset.olho);
+        var mostrar = input.type === 'password';
+        input.type = mostrar ? 'text' : 'password';
+        b.querySelector('use').setAttribute('href', mostrar ? '#i-olho-fechado' : '#i-olho');
+        b.setAttribute('aria-label', mostrar ? 'Ocultar senha' : 'Mostrar senha');
+      });
+    });
+
+    // Gavetas (painel de filtros): abre com animação e fecha mais rápido do que abre
+    function fecharGaveta(d) {
+      if (!d.open || d.classList.contains('fechando')) return;
+      d.classList.add('fechando');
+      var fim = function () { d.classList.remove('fechando'); d.close(); };
+      if (matchMedia('(prefers-reduced-motion: reduce)').matches) return fim();
+      setTimeout(fim, 200);
+    }
+    document.querySelectorAll('[data-abrir]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var d = document.getElementById(b.dataset.abrir);
+        d.showModal();
+      });
+    });
+    document.querySelectorAll('dialog.gaveta').forEach(function (d) {
+      d.addEventListener('click', function (e) { if (e.target === d) fecharGaveta(d); });  // clique fora
+      d.addEventListener('cancel', function (e) { e.preventDefault(); fecharGaveta(d); });  // tecla Esc
+      d.querySelectorAll('[data-fechar]').forEach(function (b) {
+        b.addEventListener('click', function () { fecharGaveta(d); });
+      });
+    });
+    document.querySelectorAll('[data-confirmar]').forEach(function (f) {
+      f.addEventListener('submit', function (e) {
+        if (!f.dataset.ok) { e.preventDefault(); f.dataset.ok = '1'; f.querySelector('button').textContent = 'Clique de novo para confirmar'; }
+      });
+    });
+    setTimeout(function () {
+      document.querySelectorAll('.alerta-sucesso').forEach(function (a) { a.classList.add('saindo'); });
+    }, 5000);
+  </script>
+</body>
+</html>

@@ -1,0 +1,46 @@
+{% extends "admin/_base.html" %}
+{% block titulo %}Planos · Admin{% endblock %}
+{% block painel %}
+<header class="painel-cabecalho">
+  <div><h1>Planos dos vendedores</h1><p>Quanto cada vendedor paga por mês e quantos cursos pode vender.</p></div>
+</header>
+
+<div class="lista-linhas">
+  {% for p in planos %}
+    <form method="post" class="linha form-plano {{ 'inativo' if not p.ativo }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="id" value="{{ p.id }}">
+      <div class="form-plano-campos">
+        <label>Nome<input name="nome" value="{{ p.nome }}" required></label>
+        <label>Preço/mês<span class="campo-preco"><span>R$</span><input name="preco_mensal" inputmode="decimal" value="{{ '%.2f'|format(p.preco_mensal / 100)|replace('.', ',') }}"></span></label>
+        <label>Limite de cursos<input name="limite_cursos" type="number" min="1" value="{{ p.limite_cursos or '' }}" placeholder="∞ ilimitado"></label>
+        <label class="largo">Descrição<input name="descricao" value="{{ p.descricao }}"></label>
+        <label class="inteiro">Link do checkout Kiwify<input name="checkout_url" type="url" value="{{ p.checkout_url or '' }}" placeholder="https://pay.kiwify.com.br/..."></label>
+      </div>
+      <div class="form-plano-rodape">
+        <small>{{ p.assinantes }} assinante{{ 's' if p.assinantes != 1 }} ativo{{ 's' if p.assinantes != 1 }} ·
+          {% if p.checkout_url %}<span class="ok">{{ ic("check") }} Checkout Kiwify ligado</span>{% else %}<span class="pendente">Sem link: usa pagamento simulado</span>{% endif %}</small>
+        <label class="check"><input type="checkbox" name="ativo" value="1" {{ 'checked' if p.ativo }}> Disponível para assinatura</label>
+        <button class="btn btn-escuro btn-peq">Salvar</button>
+      </div>
+    </form>
+  {% endfor %}
+</div>
+
+<h2 class="subtitulo">Novo plano</h2>
+<form method="post" class="linha form-plano">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <div class="form-plano-campos">
+    <label>Nome<input name="nome" placeholder="Ex.: Business" required></label>
+    <label>Preço/mês<span class="campo-preco"><span>R$</span><input name="preco_mensal" inputmode="decimal" placeholder="80,00"></span></label>
+    <label>Limite de cursos<input name="limite_cursos" type="number" min="1" placeholder="∞ ilimitado"></label>
+    <label class="largo">Descrição<input name="descricao" placeholder="Para quem é este plano?"></label>
+    <label class="inteiro">Link do checkout Kiwify<input name="checkout_url" type="url" placeholder="https://pay.kiwify.com.br/..."></label>
+  </div>
+  <div class="form-plano-rodape">
+    <small>Deixe o limite vazio para cursos ilimitados.</small>
+    <label class="check"><input type="checkbox" name="ativo" value="1" checked> Disponível para assinatura</label>
+    <button class="btn btn-escuro btn-peq">Criar plano</button>
+  </div>
+</form>
+{% endblock %}

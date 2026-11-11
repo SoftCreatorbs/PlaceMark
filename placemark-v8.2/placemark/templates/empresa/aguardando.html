@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block titulo %}Status do cadastro{% endblock %}
+{% block conteudo %}
+{% set st = g.empresa.status if g.empresa else 'pendente' %}
+<div class="erro-pagina status-empresa">
+  <span class="status-icone s-{{ {'pendente': 'ambar', 'rejeitada': 'rosa', 'bloqueada': 'cinza'}[st] }}">
+    {{ ic({'pendente': 'ampulheta', 'rejeitada': 'x', 'bloqueada': 'cadeado'}[st]) }}
+  </span>
+  {% if st == 'pendente' %}
+    <h1>Cadastro em análise</h1>
+    <p>Recebemos os dados de <strong>{{ g.empresa.nome_fantasia }}</strong>. Nossa equipe costuma aprovar em até 2 dias úteis. Depois disso, você escolhe um plano e começa a vender.</p>
+  {% elif st == 'rejeitada' %}
+    <h1>Cadastro não aprovado</h1>
+    <p>Não conseguimos aprovar o cadastro de <strong>{{ g.empresa.nome_fantasia }}</strong>. Fale com o suporte para entender o motivo.</p>
+  {% else %}
+    <h1>Empresa bloqueada</h1>
+    <p>O painel de <strong>{{ g.empresa.nome_fantasia }}</strong> está suspenso e os cursos saíram do catálogo. Fale com o suporte.</p>
+  {% endif %}
+  <a href="{{ url_for('inicio') }}" class="btn btn-contorno">Voltar ao início</a>
+</div>
+{% endblock %}

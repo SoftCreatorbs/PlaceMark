@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block titulo %}{{ atual.titulo if atual else curso.titulo }}{% endblock %}
+{% block conteudo %}
+<a href="{{ url_for('aluno.meus_cursos') }}" class="link-seta voltar">{{ ic("voltar") }} Meus cursos</a>
+<div class="sala">
+  <section class="sala-principal">
+    {% if atual %}
+      <div class="player">
+        {% if embed %}
+          <iframe src="{{ embed }}" title="{{ atual.titulo }}" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture; fullscreen" allowfullscreen loading="lazy"></iframe>
+        {% elif atual.video_url %}
+          <a href="{{ atual.video_url }}" target="_blank" rel="noopener noreferrer" class="player-vazio">{{ ic("play", "grande") }} Abrir vídeo em nova aba</a>
+        {% else %}
+          <div class="player-vazio">{{ ic("aulas", "grande") }} Esta aula não tem vídeo. Leia o conteúdo abaixo.</div>
+        {% endif %}
+      </div>
+      <span class="sobre">{{ curso.titulo }}</span>
+      <h1 class="titulo-aula">{{ atual.titulo }}</h1>
+      {% if atual.conteudo %}<div class="texto-aula">{{ atual.conteudo }}</div>{% endif %}
+    {% else %}
+      <div class="estado-vazio">
+        <strong>As aulas ainda estão sendo preparadas</strong>
+        <p>Assim que a escola publicar o conteúdo, ele aparece aqui.</p>
+      </div>
+    {% endif %}
+  </section>
+
+  <aside class="sala-lateral">
+    <strong>{{ aulas|length }} aulas</strong>
+    <ol class="lista-aulas clicavel">
+      {% for a in aulas %}
+        <li class="{{ 'atual' if atual and a.id == atual.id }}">
+          <a href="{{ url_for('aluno.aprender', curso_id=curso.id, aula_id=a.id) }}"><span>{{ loop.index }}</span>{{ a.titulo }}</a>
+        </li>
+      {% endfor %}
+    </ol>
+  </aside>
+</div>
+{% endblock %}

@@ -1,0 +1,48 @@
+{% extends "admin/_base.html" %}
+{% from "_macros.html" import selo, filtros %}
+{% block titulo %}Empresas · Admin{% endblock %}
+{% block painel %}
+<header class="painel-cabecalho"><div><h1>Vendedores</h1><p>Empresas e pessoas que vendem na plataforma.</p></div></header>
+{{ filtros('admin.empresas', status, [('pendente', 'Aguardando'), ('aprovada', 'Aprovadas'), ('rejeitada', 'Rejeitadas'), ('bloqueada', 'Bloqueadas'), ('todas', 'Todas')]) }}
+
+{% if empresas %}
+  <div class="lista-linhas">
+    {% for e in empresas %}
+      <article class="linha tom-{{ tom(e.id) }}">
+        <span class="monograma">{{ iniciais(e.nome_fantasia) }}</span>
+        <div class="linha-info">
+          <div class="linha-titulo"><strong>{{ e.nome_fantasia }}</strong>{{ selo(e.status) }}
+            {% if e.status == 'aprovada' %}<span class="selo-status {{ 's-indigo' if e.plano_ativo else 's-cinza' }}">{{ ('Plano ' ~ e.plano_nome) if e.plano_ativo else 'Sem plano' }}</span>{% endif %}</div>
+          <small>{{ e.documento }} · {{ e.responsavel }} · {{ e.email }} · {{ e.total_cursos }} curso{{ 's' if e.total_cursos != 1 }} · desde {{ e.criado_em|data }}</small>
+          {% if e.descricao %}<p class="motivo neutro">{{ e.descricao }}</p>{% endif %}
+        </div>
+        <div class="linha-acoes">
+          {% if e.status == 'aprovada' %}
+            <details class="rejeitar">
+              <summary class="btn btn-contorno btn-peq">{{ 'Renovar plano' if e.plano_ativo else 'Ativar plano' }}</summary>
+              <form method="post" action="{{ url_for('admin.ativar_plano', empresa_id=e.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <select name="plano_id" aria-label="Plano">
+                  {% for p in planos %}<option value="{{ p.id }}" {{ 'selected' if p.id == e.plano_id }}>{{ p.nome }} · {{ p.preco_mensal|reais }}</option>{% endfor %}
+                </select>
+                <button class="btn btn-escuro btn-peq">+30 dias</button>
+              </form>
+            </details>
+          {% endif %}
+          {% for novo, rotulo, classe in [('aprovada', 'Aprovar', 'btn-escuro'), ('rejeitada', 'Rejeitar', 'btn-contorno'), ('bloqueada', 'Bloquear', 'btn-contorno perigo')] %}
+            {% if e.status != novo and not (novo == 'rejeitada' and e.status != 'pendente') %}
+              <form method="post" action="{{ url_for('admin.empresa_status', empresa_id=e.id) }}" class="inline" {{ 'data-confirmar' if novo == 'bloqueada' }}>
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="status" value="{{ novo }}">
+                <button class="btn {{ classe }} btn-peq">{{ 'Reativar' if novo == 'aprovada' and e.status == 'bloqueada' else rotulo }}</button>
+              </form>
+            {% endif %}
+          {% endfor %}
+        </div>
+      </article>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="estado-vazio"><strong>Nada por aqui</strong><p>Nenhuma empresa com esse status.</p></div>
+{% endif %}
+{% endblock %}

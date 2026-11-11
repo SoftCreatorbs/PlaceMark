@@ -1,0 +1,20 @@
+<aside class="auth-lado" aria-hidden="true">
+  <div class="auth-lado-conteudo">
+    <span class="logo claro">{{ marca() }}<span class="logo-nome">placemark</span></span>
+    {% if lado_empresa %}
+      <h2>Venda o que você sabe. Empresa ou pessoa física.</h2>
+      <ul class="checks claro">
+        <li>Assinatura mensal ou acesso vitalício</li>
+        <li>Painel de vendas e alunos</li>
+        <li>Planos a partir de R$ 50/mês</li>
+      </ul>
+    {% else %}
+      <h2>Sua próxima habilidade começa aqui.</h2>
+      <ul class="checks claro">
+        <li>Cursos de escolas especialistas</li>
+        <li>Pague por mês ou uma vez só</li>
+        <li>Certificado ao concluir</li>
+      </ul>
+    {% endif %}
+  </div>
+</aside>

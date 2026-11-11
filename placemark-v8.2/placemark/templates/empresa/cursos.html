@@ -1,0 +1,50 @@
+{% extends "empresa/_base.html" %}
+{% from "_macros.html" import selo %}
+{% block titulo %}Meus cursos{% endblock %}
+{% block painel %}
+<header class="painel-cabecalho">
+  <div><h1>Meus cursos</h1><p>{{ cursos|length }} curso{{ 's' if cursos|length != 1 }}</p></div>
+  <a href="{{ url_for('empresa.curso_form') }}" class="btn btn-escuro btn-peq">+ Novo curso</a>
+</header>
+
+{% include "empresa/_plano_resumo.html" %}
+
+{% if cursos %}
+  <div class="lista-linhas">
+    {% for c in cursos %}
+      <article class="linha tom-{{ tom(c.id) }}">
+        <span class="monograma">{{ iniciais(c.titulo) }}</span>
+        <div class="linha-info">
+          <div class="linha-titulo"><strong>{{ c.titulo }}</strong>{{ selo(c.status) }}</div>
+          <small>
+            {{ c.total_aulas }} aula{{ 's' if c.total_aulas != 1 }} · {{ c.total_vendas }} venda{{ 's' if c.total_vendas != 1 }}
+            {% if c.preco_mensal %} · {{ c.preco_mensal|reais }}/mês{% endif %}
+            {% if c.preco_vitalicio %} · {{ c.preco_vitalicio|reais }} vitalício{% endif %}
+          </small>
+          {% if c.status == 'rejeitado' and c.motivo_rejeicao %}
+            <p class="motivo">Motivo: {{ c.motivo_rejeicao }}. Edite o curso e envie de novo.</p>
+          {% endif %}
+        </div>
+        <div class="linha-acoes">
+          <a href="{{ url_for('empresa.aulas', curso_id=c.id) }}" class="btn btn-contorno btn-peq">Aulas</a>
+          <a href="{{ url_for('empresa.curso_form', curso_id=c.id) }}" class="btn btn-contorno btn-peq">Editar</a>
+          <a href="{{ url_for('curso', curso_id=c.id) }}" class="btn btn-contorno btn-peq">Ver</a>
+          {% if c.status in ('rascunho', 'rejeitado') %}
+            <form method="post" action="{{ url_for('empresa.enviar_analise', curso_id=c.id) }}" class="inline">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button class="btn btn-escuro btn-peq">{{ 'Publicar' if g.empresa.oficial else 'Enviar para análise' }}</button>
+            </form>
+          {% endif %}
+        </div>
+      </article>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="estado-vazio">
+    <span class="estado-icone">{{ ic("capelo") }}</span>
+    <strong>Crie seu primeiro curso</strong>
+    <p>Defina título, preço e plano. Depois adicione as aulas e envie para análise.</p>
+    <a href="{{ url_for('empresa.curso_form') }}" class="btn btn-escuro btn-peq">+ Novo curso</a>
+  </div>
+{% endif %}
+{% endblock %}

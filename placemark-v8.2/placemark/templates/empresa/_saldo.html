@@ -1,0 +1,17 @@
+{# Cartão de saldo da visão geral. Recebe "saldo" (saques.saldo) e "carteira" (modo de recebimento). #}
+<div class="saldo-card">
+  <div class="saldo-info">
+    {% if g.empresa.oficial or not carteira %}
+      <small>Vendas acumuladas</small>
+      <strong>{{ resumo.receita|reais }}</strong>
+      <span>{{ 'loja oficial: cai direto na conta da Placemark' if g.empresa.oficial else 'já está na sua conta Mercado Pago' }}</span>
+    {% else %}
+      <small>Disponível para saque</small>
+      <strong>{{ saldo.disponivel|reais }}</strong>
+      {% if not g.empresa.mp_user_id %}<span class="saldo-alerta">Conecte seu Mercado Pago para sacar</span>
+      {% elif saldo.a_liberar %}<span>+ {{ saldo.a_liberar|reais }} a liberar nos próximos dias</span>
+      {% else %}<span>já sem a comissão da Placemark</span>{% endif %}
+    {% endif %}
+  </div>
+  <a href="{{ url_for('saque.painel') }}{{ '#sacar' if carteira and not g.empresa.oficial }}" class="btn btn-saldo">{{ ic('seta') }} {{ 'Sacar' if carteira and not g.empresa.oficial else 'Financeiro' }}</a>
+</div>

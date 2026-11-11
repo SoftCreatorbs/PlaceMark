@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% from "_macros.html" import selo %}
+{% block titulo %}Meus cursos{% endblock %}
+{% block conteudo %}
+<header class="cabecalho-pagina">
+  <span class="sobre">Área do aluno</span>
+  <h1>Olá, {{ g.usuario.nome.split()[0] }}</h1>
+  <p>Continue de onde parou. · <a href="{{ url_for('auth.trocar_senha') }}">Trocar minha senha</a></p>
+</header>
+
+{% if acessos %}
+  <div class="grade">
+    {% for a in acessos %}
+      <article class="card-acesso tom-{{ tom(a.curso_id) }} {{ 'expirado' if not a.ativo }}">
+        <div class="card-topo">
+          <span class="monograma">{{ iniciais(a.titulo) }}</span>
+          {{ selo(a.plano) }}
+        </div>
+        <h3>{{ a.titulo }}</h3>
+        <p class="por">por {{ a.empresa_nome }} · {{ a.total_aulas }} aulas</p>
+        <p class="validade">
+          {% if not a.expira_em %}Acesso vitalício
+          {% elif a.ativo %}Renova em {{ a.dias_restantes }} dia{{ 's' if a.dias_restantes != 1 }}
+          {% else %}Assinatura expirada{% endif %}
+        </p>
+        {% if a.ativo %}
+          <a href="{{ url_for('aluno.aprender', curso_id=a.curso_id) }}" class="btn btn-escuro btn-cheio">Continuar</a>
+        {% else %}
+          <a href="{{ url_for('aluno.checkout', curso_id=a.curso_id, plano='mensal') }}" class="btn btn-contorno btn-cheio">Renovar assinatura</a>
+        {% endif %}
+      </article>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="estado-vazio">
+    <span class="estado-icone">{{ ic("aulas") }}</span>
+    <strong>Você ainda não tem cursos</strong>
+    <p>Quando comprar um curso, ele aparece aqui para você assistir.</p>
+    <a href="{{ url_for('cursos') }}" class="btn btn-escuro btn-peq">Explorar cursos</a>
+  </div>
+{% endif %}
+
+{% if pedidos %}
+<section class="secao-tabela">
+  <h2 class="subtitulo">Histórico de compras</h2>
+  <div class="tabela-wrap">
+    <table class="tabela">
+      <thead><tr><th>Data</th><th>Curso</th><th>Plano</th><th>Valor</th><th>Status</th></tr></thead>
+      <tbody>
+        {% for p in pedidos %}
+          <tr><td>{{ p.criado_em|data }}</td><td>{{ p.titulo }}</td><td>{{ selo(p.plano) }}</td><td>{{ p.valor|reais }}</td><td>{{ selo(p.status) }}{% if p.status == 'pendente' and p.metodo == 'mercadopago' %}
+            <form method="post" action="{{ url_for('mp.verificar_pedido', pedido_id=p.id) }}" class="form-linha">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button class="btn btn-contorno btn-peq">Já paguei, verificar</button>
+            </form>{% endif %}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endif %}
+{% endblock %}

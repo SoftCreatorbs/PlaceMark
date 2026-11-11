@@ -1,0 +1,17 @@
+{% extends "_painel_base.html" %}
+{% block area %}{{ 'Loja oficial' if g.empresa.oficial else 'Painel do vendedor' }}{% endblock %}
+{% block area_nome %}{{ g.empresa.nome_fantasia }}{% endblock %}
+{% block menu_lateral %}
+  {% set ep = request.endpoint %}
+  <a href="{{ url_for('empresa.dashboard') }}" class="{{ 'ativo' if ep == 'empresa.dashboard' }}">Visão geral</a>
+  <a href="{{ url_for('saque.painel') }}" class="{{ 'ativo' if ep == 'saque.painel' }}">Financeiro</a>
+  <a href="{{ url_for('empresa.cursos') }}" class="{{ 'ativo' if ep in ('empresa.cursos', 'empresa.curso_form', 'empresa.aulas') }}">Meus cursos</a>
+  <a href="{{ url_for('empresa.vendas') }}" class="{{ 'ativo' if ep == 'empresa.vendas' }}">Vendas</a>
+  {% if not g.empresa.oficial %}
+    <a href="{{ url_for('empresa.plano') }}" class="{{ 'ativo' if ep in ('empresa.plano', 'empresa.assinar_plano') }}">Meu plano</a>
+  {% else %}
+    <a href="{{ url_for('admin.dashboard') }}">{{ ic("voltar") }} Voltar ao admin</a>
+  {% endif %}
+  <a href="{{ url_for('auth.trocar_senha') }}">Minha senha</a>
+  <a href="{{ url_for('empresa.curso_form') }}" class="lateral-acao">+ Novo curso</a>
+{% endblock %}

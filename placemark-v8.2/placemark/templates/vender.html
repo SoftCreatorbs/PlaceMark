@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block titulo %}Venda seus cursos{% endblock %}
+{% block conteudo %}
+<section class="hero hero-simples">
+  <div class="hero-texto">
+    <span class="selo">● Para empresas, escolas e qualquer pessoa que ensina</span>
+    <h1>Transforme seu conhecimento em <mark>receita recorrente</mark>.</h1>
+    <p>Publique seus cursos, venda por assinatura mensal ou acesso vitalício e acompanhe tudo em um painel feito para você.</p>
+    <div class="acoes">
+      <a href="{{ url_for('empresa.cadastro') }}" class="btn btn-escuro">Quero vender</a>
+      <a href="{{ url_for('auth.login') }}" class="btn btn-contorno">Já tenho conta</a>
+    </div>
+  </div>
+</section>
+
+<section class="grade-3">
+  <div class="beneficio"><span class="monograma">01</span><h3>Mensal ou vitalício</h3><p>Você escolhe como vender cada curso. Pode oferecer os dois planos ao mesmo tempo.</p></div>
+  <div class="beneficio tom-verde"><span class="monograma">02</span><h3>Painel completo</h3><p>Crie cursos, organize aulas com vídeo e veja suas vendas e alunos ativos.</p></div>
+  <div class="beneficio tom-ambar"><span class="monograma">03</span><h3>Preço transparente</h3><p>Um plano mensal fixo e <strong>{{ comissao }}% por venda</strong>. O resto é seu.</p></div>
+</section>
+
+<section class="secao" id="planos">
+  <div class="secao-titulo"><div><span class="sobre">Planos</span><h2>Escolha quantos cursos quer vender</h2></div></div>
+  <div class="grade-planos">
+    {% for p in planos %}
+      <article class="card-plano {{ 'popular' if loop.index == 2 }}">
+        {% if loop.index == 2 %}<span class="fita">Mais escolhido</span>{% endif %}
+        <h2>{{ p.nome }}</h2>
+        <p class="card-plano-desc">{{ p.descricao }}</p>
+        <div class="card-plano-preco">{{ p.preco_mensal|reais }}<small>/mês</small></div>
+        <ul class="checks">
+          <li><strong>{{ p.limite_cursos if p.limite_cursos else 'Ilimitados' }}</strong>&nbsp;curso{{ 's' if p.limite_cursos != 1 }} à venda</li>
+          <li>+ {{ comissao }}% por venda realizada</li>
+          <li>Venda mensal e vitalícia</li>
+        </ul>
+        <a href="{{ url_for('carrinho_plano', plano_id=p.id) }}" class="btn {{ 'btn-escuro' if loop.index == 2 else 'btn-contorno' }} btn-cheio">Começar com {{ p.nome }}</a>
+      </article>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="passos">
+  <div class="passo"><span>1</span><h3>Faça seu cadastro</h3><p>Empresa ou pessoa física. Nossa equipe analisa e aprova.</p></div>
+  <div class="passo"><span>2</span><h3>Escolha o plano</h3><p>Crie seus cursos, adicione as aulas e envie para revisão.</p></div>
+  <div class="passo"><span>3</span><h3>Comece a vender</h3><p>Publicado no catálogo, é só acompanhar as vendas.</p></div>
+</section>
+{% endblock %}

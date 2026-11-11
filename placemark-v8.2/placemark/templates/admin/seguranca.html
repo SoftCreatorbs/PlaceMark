@@ -1,0 +1,74 @@
+{% extends "admin/_base.html" %}
+{% from "_macros.html" import filtros %}
+{% block titulo %}Segurança · Admin{% endblock %}
+{% block painel %}
+<header class="painel-cabecalho">
+  <div><h1>Segurança</h1><p>Quem entrou, o que mudou e se alguém está tentando invadir.</p></div>
+  <form method="post" action="{{ url_for('admin.backup_agora') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button class="btn btn-contorno btn-peq">Fazer backup agora</button>
+  </form>
+</header>
+
+<div class="kpis">
+  <div class="kpi {{ 'kpi-alerta' if n.falhas_24h >= 10 }}"><small>Senhas erradas (24h)</small><strong>{{ n.falhas_24h }}</strong></div>
+  <div class="kpi {{ 'kpi-alerta' if n.bloqueios_24h }}"><small>Bloqueios por força bruta</small><strong>{{ n.bloqueios_24h }}</strong></div>
+  <div class="kpi"><small>Logins com sucesso (24h)</small><strong>{{ n.logins_24h }}</strong></div>
+  <div class="kpi"><small>Contas de admin</small><strong>{{ n.admins }}</strong><span>confira se todas são da equipe</span></div>
+</div>
+
+<div class="painel-grade">
+  <section class="painel-card">
+    <h2>Proteções ativas</h2>
+    <ul class="lista-checagem">
+      {% for nome, ok, dica in checklist %}
+        <li class="{{ 'ok' if ok else 'pendente' }}">
+          <span class="marcador">{{ ic('check' if ok else 'relogio') }}</span>
+          <div><strong>{{ nome }}</strong><small>{{ dica }}</small></div>
+        </li>
+      {% endfor %}
+    </ul>
+  </section>
+  <section class="painel-card">
+    <h2>IPs suspeitos (24h)</h2>
+    {% if ips %}
+      <ul class="lista-ips">
+        {% for i in ips %}<li><code>{{ i.ip }}</code><span>{{ i.n }} tentativas erradas</span><small>última: {{ i.ultima[11:16] }}</small></li>{% endfor %}
+      </ul>
+    {% else %}
+      <div class="estado-vazio"><span class="estado-icone">{{ ic('escudo') }}</span><strong>Tudo tranquilo</strong><p>Nenhum IP com várias senhas erradas.</p></div>
+    {% endif %}
+    <h2 class="subtitulo pequeno">Backups</h2>
+    {% if backups %}
+      <ul class="lista-ips">{% for nome, kb in backups[:5] %}<li><code>{{ nome }}</code><span>{{ kb }} KB</span></li>{% endfor %}</ul>
+    {% else %}<p class="suave">Nenhum backup ainda.</p>{% endif %}
+  </section>
+</div>
+
+<section class="painel-card">
+  <div class="painel-card-topo"><h2>Registro de atividades</h2></div>
+  <div class="abas">
+    <a href="{{ url_for('admin.seguranca_painel') }}" class="aba {{ 'ativa' if not tipo }}">Tudo</a>
+    <a href="{{ url_for('admin.seguranca_painel', tipo='alertas') }}" class="aba {{ 'ativa' if tipo == 'alertas' }}">Alertas</a>
+    <a href="{{ url_for('admin.seguranca_painel', tipo='admin') }}" class="aba {{ 'ativa' if tipo == 'admin' }}">Ações importantes</a>
+  </div>
+  <div class="tabela-wrap">
+    <table class="tabela">
+      <thead><tr><th>Quando</th><th>Quem</th><th>O quê</th><th>Detalhe</th><th>IP</th></tr></thead>
+      <tbody>
+        {% for e in eventos %}
+          <tr class="{{ 'linha-alerta' if e.acao in ('login_falhou', 'login_bloqueado') }}">
+            <td>{{ e.criado_em|data }} {{ e.criado_em[11:16] }}</td>
+            <td>{{ e.nome or '—' }}</td>
+            <td class="forte">{{ nomes.get(e.acao, e.acao) }}</td>
+            <td class="suave">{{ e.detalhe }}</td>
+            <td><code>{{ e.ip }}</code></td>
+          </tr>
+        {% else %}
+          <tr><td colspan="5" class="suave">Nenhuma atividade registrada.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block titulo %}Trocar senha{% endblock %}
+{% block conteudo %}
+<div class="caixa-estreita">
+  <span class="sobre">{{ ic('cadeado') }} Segurança da conta</span>
+  <h1>Trocar senha</h1>
+  <p class="sub">Use uma senha que você não usa em nenhum outro site.</p>
+  <form method="post" class="painel-card" novalidate>
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="campo">
+      <label for="atual">Senha atual</label>
+      <input id="atual" name="atual" type="password" required autocomplete="current-password">
+    </div>
+    <div class="campo">
+      <label for="senha">Nova senha</label>
+      <div class="campo-senha">
+        <input id="senha" name="senha" type="password" required minlength="8" autocomplete="new-password" placeholder="Mín. 8, letras e números">
+        <button type="button" class="olho" data-olho="senha" aria-label="Mostrar senha">{{ ic('olho') }}</button>
+      </div>
+      <small class="ajuda">Senhas fáceis como "senha123" ou "12345678a" são recusadas.</small>
+    </div>
+    <div class="campo">
+      <label for="confirma">Confirme a nova senha</label>
+      <input id="confirma" name="confirma" type="password" required autocomplete="new-password">
+    </div>
+    <div class="form-rodape">
+      <a href="{{ url_for('inicio') }}" class="btn btn-contorno">Cancelar</a>
+      <button class="btn btn-escuro">Salvar nova senha</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block titulo %}Carrinho · Plano {{ plano.nome }}{% endblock %}
+{% block conteudo %}
+<a href="{{ url_for('vender') }}#planos" class="link-seta voltar">{{ ic("voltar") }} Ver todos os planos</a>
+
+<div class="carrinho">
+  <section class="carrinho-itens">
+    <header class="carrinho-cabecalho">
+      <h1>Seu carrinho</h1>
+      <span class="passos-compra"><b>1 Carrinho</b>{{ ic("seta") }}2 Pagamento{{ ic("seta") }}3 Acesso liberado</span>
+    </header>
+
+    <article class="item-carrinho">
+      <span class="monograma grande-medio">{{ plano.nome[:2]|upper }}</span>
+      <div class="item-info">
+        <span class="sobre">Plano para vendedores</span>
+        <h2>Plano {{ plano.nome }}</h2>
+        <p>{{ plano.descricao }}</p>
+        <ul class="checks">
+          <li><strong>{{ plano.limite_cursos if plano.limite_cursos else 'Cursos ilimitados' }}</strong>{% if plano.limite_cursos %}&nbsp;curso{{ 's' if plano.limite_cursos != 1 }} à venda ao mesmo tempo{% else %}&nbsp;à venda{% endif %}</li>
+          <li>Venda por assinatura mensal ou acesso vitalício</li>
+          <li>Painel com vendas, receita e alunos ativos</li>
+          <li>Comissão de {{ comissao }}% apenas quando você vender</li>
+        </ul>
+      </div>
+      <div class="item-preco">{{ plano.preco_mensal|reais }}<small>/mês</small></div>
+    </article>
+
+    {% if outros %}
+      <div class="trocar-plano">
+        <span>Quer outro plano?</span>
+        {% for o in outros %}
+          <a href="{{ url_for('carrinho_plano', plano_id=o.id) }}" class="aba">{{ o.nome }} · {{ o.preco_mensal|reais }}</a>
+        {% endfor %}
+      </div>
+    {% endif %}
+  </section>
+
+  <aside class="resumo carrinho-resumo">
+    <small>Resumo do pedido</small>
+    <div class="ticket-linha"><span>Plano {{ plano.nome }}</span><span>{{ plano.preco_mensal|reais }}</span></div>
+    <div class="ticket-linha"><span>Cobrança</span><span>Mensal</span></div>
+    <div class="ticket-linha total"><span>Total hoje</span><span>{{ plano.preco_mensal|reais }}</span></div>
+
+    <a href="{{ url_for('comprar_plano', plano_id=plano.id) }}" class="btn btn-escuro btn-cheio btn-comprar" rel="noopener">
+      Comprar agora
+    </a>
+    <p class="seguro">{{ ic("escudo") }} Pagamento seguro processado pela <strong>Kiwify</strong>: Pix, cartão ou boleto.</p>
+
+    <div class="aviso-email">
+      <strong>Importante</strong>
+      {% if g.usuario %}
+        Use o mesmo e-mail da sua conta (<b>{{ g.usuario.email }}</b>) no checkout. É por ele que liberamos seu plano.
+      {% else %}
+        Use no checkout o mesmo e-mail que você vai usar para <a href="{{ url_for('empresa.cadastro') }}">criar sua conta de vendedor</a>. É por ele que liberamos seu plano.
+      {% endif %}
+    </div>
+  </aside>
+</div>
+{% endblock %}

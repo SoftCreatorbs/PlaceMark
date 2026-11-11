@@ -1,0 +1,78 @@
+{% extends "admin/_base.html" %}
+{% block titulo %}Mercado Pago · Admin{% endblock %}
+{% block painel %}
+<header class="painel-cabecalho">
+  <div><h1>Mercado Pago</h1><p>{% if carteira %}Modo carteira: todas as vendas caem na conta da Placemark e os vendedores sacam por Pix (veja <a href="{{ url_for('saque.admin_lista') }}">Saques</a>).{% else %}Modo split: o vendedor recebe a parte dele direto na conta e a Placemark recebe a comissão.{% endif %}</p></div>
+</header>
+
+<div class="painel-grade">
+  <section class="painel-card">
+    <h2 class="subtitulo pequeno">Situação</h2>
+    <ul class="lista-checagem">
+      {% set itens = [
+        ("Endereço público do site (https)", v.mp_site_url != "", "O Mercado Pago precisa conseguir acessar o site. Não funciona com 127.0.0.1."),
+        ("Access Token da Placemark", v.mp_access_token != "", "Recebe todas as vendas e envia os Pix dos saques." if carteira else "Recebe a comissão e as vendas da Loja oficial."),
+        ("Client ID e Client Secret", v.mp_client_id != "" and v.mp_client_secret != "", "Permitem que os vendedores conectem a conta deles (exigido para sacar)." if carteira else "Permitem que os vendedores conectem a conta deles."),
+        ("Pagamento real ligado", ativo, "Com isso ligado, o pagamento simulado deixa de existir."),
+      ] %}
+      {% for nome, ok, dica in itens %}
+        <li class="{{ 'ok' if ok else 'pendente' }}">
+          <span class="marcador">{{ ic('check' if ok else 'relogio') }}</span>
+          <div><strong>{{ nome }}</strong><small>{{ dica }}</small></div>
+        </li>
+      {% endfor %}
+    </ul>
+    <div class="kpis">
+      <div class="kpi"><small>Vendedores conectados</small><strong>{{ conectados }}</strong></div>
+      <div class="kpi {{ 'kpi-alerta' if sem_conta }}"><small>Aprovados sem conta</small><strong>{{ sem_conta|length }}</strong></div>
+    </div>
+    {% if sem_conta %}<p class="ajuda">{{ 'Vendem normalmente, mas só sacam depois de conectar' if carteira else 'Sem botão de compra até conectar' }}: {{ sem_conta|map(attribute='nome_fantasia')|join(', ') }}.</p>{% endif %}
+    {% if v.mp_access_token %}
+      <form method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="acao" value="testar">
+        <button class="btn btn-contorno btn-peq">Testar conexão com o Mercado Pago</button>
+      </form>
+    {% endif %}
+  </section>
+
+  <section class="painel-card">
+    <h2 class="subtitulo pequeno">Onde pegar as credenciais</h2>
+    <ol class="lista-passos">
+      <li>Entre em <b>mercadopago.com.br/developers</b> com a conta da Placemark e vá em <b>Suas integrações → Criar aplicação</b>.</li>
+      <li>Escolha <b>Pagamentos online</b> e <b>Checkout Pro</b>. Marque que é um <b>marketplace</b>.</li>
+      <li>Em <b>Credenciais de produção</b> (ou de teste), copie o <b>Access Token</b>, o <b>Client ID</b> e o <b>Client Secret</b>.</li>
+      <li>Na aplicação, em <b>URLs de redirecionamento</b>, cole:<br>
+        {% if redirect_uri %}<code>{{ redirect_uri }}</code>{% else %}<em>salve o endereço do site primeiro</em>{% endif %}</li>
+    </ol>
+  </section>
+</div>
+
+<form method="post" class="painel-card form-painel estreito" autocomplete="off">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <h2 class="subtitulo pequeno">Credenciais</h2>
+  <div class="campo">
+    <label for="mp_site_url">Endereço público do site</label>
+    <input id="mp_site_url" name="mp_site_url" type="url" placeholder="https://placemark.com.br" value="{{ v.mp_site_url }}" {{ 'disabled' if 'mp_site_url' in via_ambiente }}>
+    <small class="ajuda">Para testar no seu PC, use um túnel com https (ex.: Cloudflare Tunnel).</small>
+  </div>
+  <div class="campo">
+    <label for="mp_client_id">Client ID</label>
+    <input id="mp_client_id" name="mp_client_id" inputmode="numeric" value="{{ v.mp_client_id }}" {{ 'disabled' if 'mp_client_id' in via_ambiente }}>
+  </div>
+  <div class="campo">
+    <label for="mp_client_secret">Client Secret</label>
+    <input id="mp_client_secret" name="mp_client_secret" type="password" placeholder="{{ mascarar(v.mp_client_secret) or 'cole aqui' }}" {{ 'disabled' if 'mp_client_secret' in via_ambiente }}>
+    <small class="ajuda">Deixe vazio para manter o que já está salvo.</small>
+  </div>
+  <div class="campo">
+    <label for="mp_access_token">Access Token</label>
+    <input id="mp_access_token" name="mp_access_token" type="password" placeholder="{{ mascarar(v.mp_access_token) or 'APP_USR-...' }}" {{ 'disabled' if 'mp_access_token' in via_ambiente }}>
+    <small class="ajuda">Deixe vazio para manter. Nunca mostre esse código para ninguém.</small>
+  </div>
+  <label class="check"><input type="checkbox" name="mp_modo_teste" value="1" {{ 'checked' if v.mp_modo_teste == '1' }}> Modo teste (credenciais de teste, sem dinheiro de verdade)</label>
+  <label class="check"><input type="checkbox" name="apagar_segredos" value="1"> Apagar Client Secret e Access Token salvos</label>
+  {% if via_ambiente %}<p class="ajuda">Campos bloqueados vêm de variáveis de ambiente do servidor.</p>{% endif %}
+  <div class="form-rodape"><button class="btn btn-escuro">Salvar</button></div>
+</form>
+{% endblock %}

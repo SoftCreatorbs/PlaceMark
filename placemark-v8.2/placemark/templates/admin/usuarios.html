@@ -1,0 +1,35 @@
+{% extends "admin/_base.html" %}
+{% from "_macros.html" import selo %}
+{% block titulo %}Usuários · Admin{% endblock %}
+{% block painel %}
+<header class="painel-cabecalho"><div><h1>Usuários</h1><p>Alunos, empresas e equipe.</p></div></header>
+<form class="busca" method="get">
+  <input type="search" name="q" value="{{ busca }}" placeholder="Buscar por nome ou e-mail" aria-label="Buscar">
+  <button class="btn btn-escuro">Buscar</button>
+</form>
+<section class="painel-card">
+  <div class="tabela-wrap">
+    <table class="tabela">
+      <thead><tr><th>Nome</th><th>E-mail</th><th>Tipo</th><th>Desde</th><th>Situação</th><th></th></tr></thead>
+      <tbody>
+        {% for u in usuarios %}
+          <tr class="{{ 'inativo' if not u.ativo }}">
+            <td class="forte">{{ u.nome }}</td><td>{{ u.email }}</td><td>{{ selo(u.papel) }}</td><td>{{ u.criado_em|data }}</td>
+            <td>{{ 'Ativo' if u.ativo else 'Bloqueado' }}</td>
+            <td class="num">
+              {% if u.papel != 'admin' %}
+                <form method="post" action="{{ url_for('admin.alternar_usuario', usuario_id=u.id) }}" {{ 'data-confirmar' if u.ativo }}>
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button class="botao-texto {{ 'perigo' if u.ativo }}">{{ 'Bloquear' if u.ativo else 'Reativar' }}</button>
+                </form>
+              {% endif %}
+            </td>
+          </tr>
+        {% else %}
+          <tr><td colspan="6" class="suave">Nenhum usuário encontrado.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

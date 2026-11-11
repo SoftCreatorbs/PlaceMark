@@ -1,0 +1,59 @@
+{% extends "empresa/_base.html" %}
+{% block titulo %}{{ 'Editar curso' if curso else 'Novo curso' }}{% endblock %}
+{% block painel %}
+{% set mensal_on = dados._mensal_on if '_mensal_on' in dados else (dados.preco_mensal is not none and dados.preco_mensal != '') or not curso %}
+{% set vitalicio_on = dados._vitalicio_on if '_vitalicio_on' in dados else (dados.preco_vitalicio is not none and dados.preco_vitalicio != '') %}
+{% macro valor_preco(v) %}{% if v is number %}{{ '%.2f'|format(v / 100)|replace('.', ',') }}{% elif v %}{{ v }}{% endif %}{% endmacro %}
+
+<a href="{{ url_for('empresa.cursos') }}" class="link-seta voltar">{{ ic("voltar") }} Meus cursos</a>
+<header class="painel-cabecalho">
+  <div>
+    <h1>{{ 'Editar curso' if curso else 'Novo curso' }}</h1>
+    <p>{{ 'Alterações em cursos publicados aparecem na hora no catálogo.' if curso and curso.status == 'publicado' else 'Depois de salvar, você adiciona as aulas.' }}</p>
+  </div>
+</header>
+
+<form method="post" class="painel-card form-painel" novalidate>
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <div class="campo">
+    <label for="titulo">Título do curso</label>
+    <input id="titulo" name="titulo" value="{{ dados.titulo }}" required placeholder="Ex.: Excel do zero ao avançado">
+  </div>
+  <div class="campo">
+    <label for="descricao">Descrição</label>
+    <textarea id="descricao" name="descricao" rows="4" required placeholder="O que o aluno vai aprender? Para quem é o curso?">{{ dados.descricao }}</textarea>
+  </div>
+  <div class="campos-duplos">
+    <div class="campo">
+      <label for="categoria">Categoria</label>
+      <select id="categoria" name="categoria">
+        {% for cat in categorias %}<option {{ 'selected' if dados.categoria == cat }}>{{ cat }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="campo">
+      <label for="carga_horas">Carga horária (horas)</label>
+      <input id="carga_horas" name="carga_horas" type="number" min="0" value="{{ dados.carga_horas or '' }}" placeholder="Ex.: 20">
+    </div>
+  </div>
+
+  <p class="grupo-titulo">Planos de venda</p>
+  <div class="planos-form">
+    <label class="plano-opcao">
+      <input type="checkbox" name="vende_mensal" value="1" {{ 'checked' if mensal_on }}>
+      <span class="plano-opcao-texto"><strong>Assinatura mensal</strong><small>O aluno paga todo mês enquanto quiser acessar.</small></span>
+      <span class="campo-preco"><span>R$</span><input name="preco_mensal" inputmode="decimal" value="{{ valor_preco(dados.preco_mensal) }}" placeholder="49,90" aria-label="Preço mensal"></span>
+    </label>
+    <label class="plano-opcao">
+      <input type="checkbox" name="vende_vitalicio" value="1" {{ 'checked' if vitalicio_on }}>
+      <span class="plano-opcao-texto"><strong>Acesso vitalício</strong><small>O aluno paga uma vez e acessa para sempre.</small></span>
+      <span class="campo-preco"><span>R$</span><input name="preco_vitalicio" inputmode="decimal" value="{{ valor_preco(dados.preco_vitalicio) }}" placeholder="297,00" aria-label="Preço vitalício"></span>
+    </label>
+  </div>
+  <p class="ajuda">Você pode oferecer os dois. {{ '' if g.empresa.oficial else 'A comissão da plataforma é descontada de cada venda.' }}</p>
+
+  <div class="form-rodape">
+    <a href="{{ url_for('empresa.cursos') }}" class="btn btn-contorno">Cancelar</a>
+    <button class="btn btn-escuro">{{ 'Salvar alterações' if curso else 'Criar curso' }}</button>
+  </div>
+</form>
+{% endblock %}

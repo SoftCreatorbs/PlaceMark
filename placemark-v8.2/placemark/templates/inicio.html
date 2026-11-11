@@ -1,0 +1,165 @@
+{% extends "base.html" %}
+{% block titulo %}Cursos online de quem entende{% endblock %}
+{% block conteudo %}
+
+{# ---------- Faixa de categorias ---------- #}
+<nav class="faixa-categorias" aria-label="Categorias">
+  {% for cat in categorias %}
+    {% set slug = cat|lower|replace('ó', 'o')|replace('ú', 'u')|replace('ç', 'c')|replace('ã', 'a') %}
+    <a href="{{ url_for('cursos', cat=cat) }}" class="categoria cat-{{ loop.index0 % 4 }}">
+      <span class="categoria-icone">{{ ic('cat-' ~ slug) }}</span>
+      <span class="categoria-nome">{{ cat }}</span>
+      <small>{{ contagem.get(cat, 0) }} curso{{ 's' if contagem.get(cat, 0) != 1 }}</small>
+    </a>
+  {% endfor %}
+</nav>
+
+{# ---------- Banner rotativo ---------- #}
+<section class="banner" aria-roledescription="carrossel" aria-label="Destaques">
+  <div class="banner-trilho" data-banner>
+    <article class="slide slide-1" aria-label="1 de 3">
+      <div class="slide-texto">
+        <span class="selo">{{ ic('brilho') }} {{ total_cursos }} cursos disponíveis</span>
+        <h1>Aprenda com quem faz, <mark>no seu ritmo</mark>.</h1>
+        <p>Cursos de escolas e especialistas. Assine por mês ou garanta acesso vitalício.</p>
+        <div class="acoes">
+          <a href="{{ url_for('cursos') }}" class="btn btn-escuro">Explorar cursos {{ ic('seta') }}</a>
+          {% if not g.usuario %}<a href="{{ url_for('auth.cadastro') }}" class="btn btn-contorno">Criar conta grátis</a>{% endif %}
+        </div>
+      </div>
+      <div class="slide-arte" aria-hidden="true">
+        <span class="orbita o1"></span><span class="orbita o2"></span>
+        <div class="mini-capa m1 capa tom-indigo padrao-pontos"><span class="capa-sigla">Py</span></div>
+        <div class="mini-capa m2 capa tom-verde padrao-ondas"><span class="capa-sigla">EA</span></div>
+        <div class="mini-capa m3 capa tom-ambar padrao-linhas"><span class="capa-sigla">In</span></div>
+      </div>
+    </article>
+
+    {% if destaque %}
+    <article class="slide slide-2" aria-label="2 de 3">
+      <div class="slide-texto">
+        <span class="selo selo-roxo">{{ ic('verificado') }} Curso em destaque</span>
+        <h2>{{ destaque.titulo }}</h2>
+        <p>{{ destaque.descricao }}</p>
+        <div class="acoes">
+          <a href="{{ url_for('curso', curso_id=destaque.id) }}" class="btn btn-escuro">Ver curso {{ ic('seta') }}</a>
+          <span class="slide-preco">
+            {% if destaque.preco_mensal %}{{ destaque.preco_mensal|reais }}<small>/mês</small>{% else %}{{ destaque.preco_vitalicio|reais }}<small> vitalício</small>{% endif %}
+          </span>
+        </div>
+      </div>
+      <div class="slide-arte" aria-hidden="true">
+        {% set item = destaque %}{% set tamanho = 'destaque' %}{% include "_capa.html" %}
+      </div>
+    </article>
+    {% endif %}
+
+    <article class="slide slide-3" aria-label="3 de 3">
+      <div class="slide-texto">
+        <span class="selo selo-limao">{{ ic('moeda') }} Para quem ensina</span>
+        <h2>Tem um curso? <mark>Venda aqui.</mark></h2>
+        <p>Crie sua loja, publique cursos e receba por assinatura ou venda vitalícia. Planos a partir de {{ preco_plano|reais }}/mês.</p>
+        <div class="acoes">
+          <a href="{{ url_for('vender') }}" class="btn btn-claro">Começar a vender {{ ic('seta') }}</a>
+        </div>
+      </div>
+      <div class="slide-arte arte-vender" aria-hidden="true">
+        <div class="painel-fake">
+          <small>Receita do mês</small>
+          <strong>R$ 4.870,90</strong>
+          <div class="barras"><span style="height:35%"></span><span style="height:55%"></span><span style="height:45%"></span><span style="height:70%"></span><span style="height:62%"></span><span style="height:90%"></span></div>
+        </div>
+      </div>
+    </article>
+  </div>
+  <div class="banner-controles">
+    <button type="button" class="banner-seta" data-banner-ant aria-label="Anterior">{{ ic('voltar') }}</button>
+    <div class="banner-pontos" role="tablist">
+      <button type="button" class="ponto ativo" aria-label="Destaque 1"></button>
+      {% if destaque %}<button type="button" class="ponto" aria-label="Destaque 2"></button>{% endif %}
+      <button type="button" class="ponto" aria-label="Destaque 3"></button>
+    </div>
+    <button type="button" class="banner-seta" data-banner-prox aria-label="Próximo">{{ ic('seta') }}</button>
+  </div>
+</section>
+
+{# ---------- Selos de confiança ---------- #}
+<section class="selos-confianca">
+  <div><span>{{ ic('escudo') }}</span><p><strong>Compra segura</strong>Pagamento protegido</p></div>
+  <div><span>{{ ic('garantia') }}</span><p><strong>Garantia de 7 dias</strong>Ou seu dinheiro de volta</p></div>
+  <div><span>{{ ic('verificado') }}</span><p><strong>Vendedores verificados</strong>Todos aprovados pela equipe</p></div>
+  <div><span>{{ ic('pix') }}</span><p><strong>Pix ou cartão</strong>Acesso liberado na hora</p></div>
+</section>
+
+{# ---------- Vitrines ---------- #}
+{% for titulo, sub, lista, link in vitrines %}
+<section class="vitrine">
+  <div class="vitrine-topo">
+    <div><h2>{{ titulo }}</h2><p>{{ sub }}</p></div>
+    <div class="vitrine-acoes">
+      <a href="{{ link }}" class="link-seta">Ver todos {{ ic('seta') }}</a>
+      <button type="button" class="vitrine-seta" data-rolar="-1" aria-label="Voltar">{{ ic('voltar') }}</button>
+      <button type="button" class="vitrine-seta" data-rolar="1" aria-label="Avançar">{{ ic('seta') }}</button>
+    </div>
+  </div>
+  <div class="vitrine-trilho">
+    {% for c in lista %}{% include "_card_curso.html" %}{% endfor %}
+  </div>
+</section>
+{% endfor %}
+
+{% if not vitrines %}
+  <div class="estado-vazio largo">
+    <span class="estado-icone">{{ ic('capelo') }}</span>
+    <strong>Os primeiros cursos estão chegando</strong>
+    <p>Que tal ser o primeiro a vender na Placemark?</p>
+    <a href="{{ url_for('vender') }}" class="btn btn-escuro btn-peq">Quero vender</a>
+  </div>
+{% endif %}
+
+<section class="faixa-empresa">
+  <div>
+    <span class="sobre claro">Para escolas, empresas e especialistas</span>
+    <h2>Transforme o que você sabe em renda.</h2>
+    <p>Painel completo, venda mensal ou vitalícia e pagamento via Kiwify. Você foca em ensinar.</p>
+  </div>
+  <a href="{{ url_for('vender') }}" class="btn btn-claro">Ver planos {{ ic('seta') }}</a>
+</section>
+
+<script nonce="{{ csp_nonce() }}">
+  // Banner: rola com o dedo (scroll-snap) e passa sozinho a cada 6s. Pausa ao passar o mouse.
+  (function () {
+    var trilho = document.querySelector('[data-banner]');
+    if (!trilho) return;
+    var slides = trilho.children, pontos = document.querySelectorAll('.banner-pontos .ponto');
+    var atual = 0, timer = null, reduzir = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    function ir(i) {
+      atual = (i + slides.length) % slides.length;
+      trilho.scrollTo({ left: slides[atual].offsetLeft - trilho.offsetLeft, behavior: reduzir ? 'auto' : 'smooth' });
+    }
+    function marcar() {
+      var i = Math.round(trilho.scrollLeft / trilho.clientWidth);
+      atual = i;
+      pontos.forEach(function (p, j) { p.classList.toggle('ativo', j === i); });
+    }
+    function iniciar() { if (!reduzir) { parar(); timer = setInterval(function () { ir(atual + 1); }, 6000); } }
+    function parar() { clearInterval(timer); }
+    trilho.addEventListener('scroll', function () { clearTimeout(trilho._t); trilho._t = setTimeout(marcar, 60); });
+    pontos.forEach(function (p, j) { p.addEventListener('click', function () { ir(j); iniciar(); }); });
+    document.querySelector('[data-banner-ant]').addEventListener('click', function () { ir(atual - 1); iniciar(); });
+    document.querySelector('[data-banner-prox]').addEventListener('click', function () { ir(atual + 1); iniciar(); });
+    var banner = trilho.closest('.banner');
+    banner.addEventListener('mouseenter', parar); banner.addEventListener('mouseleave', iniciar);
+    banner.addEventListener('focusin', parar);
+    document.addEventListener('visibilitychange', function () { document.hidden ? parar() : iniciar(); });
+    iniciar();
+  })();
+  // Setas das vitrines
+  document.querySelectorAll('[data-rolar]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var t = b.closest('.vitrine').querySelector('.vitrine-trilho');
+      t.scrollBy({ left: (t.clientWidth * 0.85) * Number(b.dataset.rolar), behavior: 'smooth' });
+    });
+  });
+</script>
+{% endblock %}

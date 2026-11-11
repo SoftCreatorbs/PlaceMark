@@ -1,0 +1,138 @@
+{% extends "admin/_base.html" %}
+{% from "_macros.html" import selo, filtros %}
+{% block titulo %}Saques · Admin{% endblock %}
+{% block painel %}
+<header class="painel-cabecalho">
+  <div><h1>Saques</h1><p>{{ 'O dinheiro das vendas fica na conta Mercado Pago da Placemark. Daqui sai o Pix de cada vendedor.' if carteira else 'Modo split ligado: cada venda cai direto na conta do vendedor e não há saques aqui.' }}</p></div>
+</header>
+
+<div class="kpis">
+  <div class="kpi destaque"><small>Dinheiro dos vendedores na sua conta</small><strong>{{ devido|reais }}</strong><span>vendas menos saques já pagos (precisa estar na conta)</span></div>
+  <div class="kpi {{ 'kpi-alerta' if n.fila }}"><small>Na fila</small><strong>{{ n.fila }}</strong><span>{{ n.fila_valor|reais }} a enviar</span></div>
+  <div class="kpi"><small>Pago este mês</small><strong>{{ n.pago_mes|reais }}</strong><span>em Pix para vendedores</span></div>
+  <div class="kpi"><small>Taxas de saque</small><strong>{{ n.taxas|reais }}</strong><span>receita da Placemark</span></div>
+</div>
+
+{% if carteira and not mp_ativo %}
+  <div class="aviso-conectar">
+    <div><strong>Mercado Pago ainda não configurado</strong><span>Os saques ficam na fila manual: faça o Pix pelo app e marque como pago com o código do comprovante.</span></div>
+    <a href="{{ url_for('mp.admin_config') }}" class="btn btn-claro btn-peq">Configurar</a>
+  </div>
+{% endif %}
+
+<section class="painel-card">
+  <div class="painel-card-topo">
+    <h2>Pedidos de saque</h2>
+    {{ filtros('saque.admin_lista', status, [('fila', 'Na fila'), ('pago', 'Pagos'), ('falhou', 'Falharam'), ('cancelado', 'Cancelados'), ('todos', 'Todos')]) }}
+  </div>
+  {% if saques %}
+    <div class="tabela-wrap">
+      <table class="tabela">
+        <thead><tr><th>#</th><th>Data</th><th>Vendedor</th><th>Pix</th><th class="num">Saque</th><th class="num">Taxa</th><th class="num">Enviar</th><th>Status</th><th>Ações</th></tr></thead>
+        <tbody>
+          {% for s in saques %}
+            <tr>
+              <td class="suave">{{ s.id }}</td>
+              <td>{{ s.criado_em|data }}</td>
+              <td>{{ s.nome_fantasia }}{% if s.mp_nome %}<small class="ajuda">MP: {{ s.mp_nome }}</small>{% endif %}</td>
+              <td class="quebra">{{ tipos_chave.get(s.pix_tipo, s.pix_tipo) }}: <code>{{ s.pix_chave }}</code><small class="ajuda">Titular {{ s.titular_tipo }} {{ s.titular_documento }}</small></td>
+              <td class="num">{{ s.valor|reais }}</td>
+              <td class="num suave">{{ s.taxa|reais }}</td>
+              <td class="num forte">{{ s.valor_liquido|reais }}</td>
+              <td class="quebra">
+                {{ selo(s.status) }}
+                {% if s.status == 'pago' %}<small class="ajuda">{{ 'Comprovante ' ~ s.comprovante if s.comprovante else 'MP ' ~ (s.mp_transacao_id or '—') }}</small>{% endif %}
+                {% if s.erro %}<small class="{{ 'aviso-incerto' if s.status in ('solicitado', 'processando') else 'erro-linha' }}">{{ s.erro[:220] }}</small>{% endif %}
+              </td>
+              <td>
+                {% if s.status in ('solicitado', 'processando') %}
+                <div class="saque-acoes">
+                  {% if mp_ativo %}
+                  <form method="post" action="{{ url_for('saque.admin_enviar', saque_id=s.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button class="btn btn-escuro btn-peq" title="Usa a mesma chave de idempotência: nunca paga duas vezes">{{ 'Reenviar' if s.tentativas else 'Enviar Pix' }}</button>
+                  </form>
+                  {% endif %}
+                  {% if s.mp_transacao_id %}
+                  <form method="post" action="{{ url_for('saque.admin_consultar', saque_id=s.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button class="btn btn-contorno btn-peq">Consultar</button>
+                  </form>
+                  {% endif %}
+                  <form method="post" action="{{ url_for('saque.admin_marcar_pago', saque_id=s.id) }}" {{ 'data-confirmar' if s.status == 'processando' }}>
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="text" name="comprovante" placeholder="ID do comprovante Pix" aria-label="ID do comprovante do Pix" required>
+                    <button class="btn btn-contorno btn-peq">Marcar pago</button>
+                  </form>
+                  <form method="post" action="{{ url_for('saque.admin_cancelar', saque_id=s.id) }}" data-confirmar>
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    {% if s.status == 'processando' %}<input type="hidden" name="confirmo" value="1">{% endif %}
+                    <button class="link-discreto">Cancelar</button>
+                  </form>
+                </div>
+                {% else %}—{% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="estado-vazio"><strong>{{ 'Nenhum saque na fila' if status == 'fila' else 'Nenhum saque aqui' }}</strong><p>Quando um vendedor pedir um saque, ele aparece aqui.</p></div>
+  {% endif %}
+</section>
+
+<div class="painel-grade">
+  <form method="post" class="painel-card form-painel">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <h2 class="subtitulo pequeno">Regras de saque</h2>
+
+    <p class="rotulo-grupo">Como o dinheiro das vendas é recebido</p>
+    <div class="opcoes-radio">
+      <label><input type="radio" name="mp_modo_recebimento" value="carteira" {{ 'checked' if regras.mp_modo_recebimento != 'split' }}>
+        <span><b>Carteira Placemark (recomendado)</b><small>Tudo cai na conta da Placemark. O vendedor vê o saldo e saca por Pix, já sem a taxa.</small></span></label>
+      <label><input type="radio" name="mp_modo_recebimento" value="split" {{ 'checked' if regras.mp_modo_recebimento == 'split' }}>
+        <span><b>Split automático</b><small>Cada venda cai direto na conta Mercado Pago do vendedor. Sem saldo e sem taxa de saque.</small></span></label>
+    </div>
+
+    <div class="regras-grade">
+      <div class="campo">
+        <label for="saque_taxa_fixa">Taxa fixa por saque</label>
+        <div class="campo-preco"><span>R$</span><input id="saque_taxa_fixa" name="saque_taxa_fixa" inputmode="decimal" value="{{ '%.2f'|format(taxa_fixa / 100)|replace('.', ',') }}"></div>
+      </div>
+      <div class="campo">
+        <label for="saque_taxa_percentual">Taxa sobre o valor</label>
+        <div class="campo-preco"><input id="saque_taxa_percentual" name="saque_taxa_percentual" inputmode="decimal" value="{{ regras.saque_taxa_percentual|replace('.', ',') }}"><span>%</span></div>
+      </div>
+      <div class="campo">
+        <label for="saque_minimo">Saque mínimo</label>
+        <div class="campo-preco"><span>R$</span><input id="saque_minimo" name="saque_minimo" inputmode="decimal" value="{{ '%.2f'|format(minimo / 100)|replace('.', ',') }}"></div>
+      </div>
+      <div class="campo">
+        <label for="saque_dias_liberacao">Prazo de liberação</label>
+        <div class="campo-preco"><input id="saque_dias_liberacao" name="saque_dias_liberacao" type="number" min="0" max="60" value="{{ regras.saque_dias_liberacao }}"><span>dias</span></div>
+      </div>
+    </div>
+    <small class="ajuda">A taxa é descontada do valor sacado: o vendedor pede R$ 100,00 e recebe R$ 100,00 menos a taxa. O prazo de liberação protege contra estornos e contestações de cartão depois do repasse.</small>
+
+    <div class="opcoes-radio campo-espaco">
+      <label><input type="radio" name="saque_envio" value="automatico" {{ 'checked' if regras.saque_envio == 'automatico' }}>
+        <span><b>Envio automático pelo Mercado Pago</b><small>O Pix sai na hora pela API de saques (Money Out). Se o Mercado Pago recusar, o saque cai na fila.</small></span></label>
+      <label><input type="radio" name="saque_envio" value="manual" {{ 'checked' if regras.saque_envio == 'manual' }}>
+        <span><b>Fila manual</b><small>A equipe faz o Pix pelo app do Mercado Pago e marca como pago aqui.</small></span></label>
+    </div>
+    <div class="form-rodape"><button class="btn btn-escuro">Salvar regras</button></div>
+  </form>
+
+  <section class="painel-card">
+    <h2 class="subtitulo pequeno">Envio automático: o que precisa</h2>
+    <ol class="lista-passos">
+      <li>Use o <b>Access Token</b> da conta da Placemark em <b>Admin → Mercado Pago</b> (o mesmo que recebe as vendas).</li>
+      <li>Peça ao Mercado Pago a liberação da API de <b>Saques / Money Out</b> (Pix) para a sua aplicação.</li>
+      <li>Em produção, o Mercado Pago exige que cada envio seja <b>assinado</b> com chaves que eles fornecem. Até isso estar configurado, os envios recusados caem na fila manual, sem perder nada.</li>
+      <li>Mantenha saldo na conta Mercado Pago: vendas no cartão podem levar dias para ficar disponíveis lá. Se faltar saldo, o saque volta para a fila.</li>
+    </ol>
+    <p class="ajuda">Proteções: cada saque tem uma chave única, então reenviar nunca paga duas vezes. O Pix só é aceito para uma chave do mesmo CPF/CNPJ da conta Mercado Pago que o vendedor conectou. {% if teste %}<b>Modo teste ativo.</b>{% endif %}</p>
+  </section>
+</div>
+{% endblock %}

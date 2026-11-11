@@ -1,0 +1,45 @@
+{% extends "empresa/_base.html" %}
+{% from "_macros.html" import selo %}
+{% block titulo %}Painel da empresa{% endblock %}
+{% block painel %}
+<header class="painel-cabecalho">
+  <div>
+    <h1>Visão geral</h1>
+    <p>Como seus cursos estão indo.</p>
+  </div>
+  <a href="{{ url_for('empresa.curso_form') }}" class="btn btn-escuro btn-peq">+ Novo curso</a>
+</header>
+
+{% include "empresa/_saldo.html" %}
+{% include "empresa/_plano_resumo.html" %}
+
+<div class="kpis">
+  <div class="kpi"><small>Este mês</small><strong>{{ resumo.receita_mes|reais }}</strong></div>
+  <div class="kpi"><small>Vendas</small><strong>{{ resumo.vendas }}</strong></div>
+  <div class="kpi"><small>Alunos ativos</small><strong>{{ alunos }}</strong></div>
+</div>
+
+<section class="painel-card">
+  <div class="painel-card-topo">
+    <h2>Últimas vendas</h2>
+    <a href="{{ url_for('empresa.vendas') }}" class="link-seta">Ver todas {{ ic("seta") }}</a>
+  </div>
+  {% if recentes %}
+    <div class="tabela-wrap">
+      <table class="tabela">
+        <thead><tr><th>Data</th><th>Aluno</th><th>Curso</th><th>Plano</th><th class="num">Você recebe</th></tr></thead>
+        <tbody>
+          {% for v in recentes %}
+            <tr><td>{{ v.criado_em|data }}</td><td>{{ v.aluno_nome }}</td><td>{{ v.titulo }}</td><td>{{ selo(v.plano) }}</td><td class="num">{{ v.valor_empresa|reais }}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="estado-vazio">
+      <strong>Nenhuma venda ainda</strong>
+      <p>{% if publicados %}Seus cursos já estão no catálogo. As vendas aparecem aqui.{% elif not g.plano %}Assine um plano, crie um curso e envie para análise.{% elif g.empresa.oficial %}Crie um curso, adicione as aulas e publique.{% else %}Crie um curso e envie para análise para começar a vender.{% endif %}</p>
+    </div>
+  {% endif %}
+</section>
+{% endblock %}

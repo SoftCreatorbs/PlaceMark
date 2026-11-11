@@ -1,0 +1,46 @@
+{% extends "admin/_base.html" %}
+{% from "_macros.html" import selo %}
+{% block titulo %}Admin{% endblock %}
+{% block painel %}
+<header class="painel-cabecalho"><div><h1>Visão geral</h1><p>Comissão atual: {{ comissao_pct }}% por venda</p></div></header>
+
+{% if n.empresas_pendentes or n.cursos_analise %}
+<div class="pendencias">
+  {% if n.empresas_pendentes %}
+    <a href="{{ url_for('admin.empresas', status='pendente') }}" class="pendencia">
+      <strong>{{ n.empresas_pendentes }}</strong> empresa{{ 's' if n.empresas_pendentes != 1 }} aguardando aprovação {{ ic("seta") }}
+    </a>
+  {% endif %}
+  {% if n.cursos_analise %}
+    <a href="{{ url_for('admin.cursos', status='em_analise') }}" class="pendencia">
+      <strong>{{ n.cursos_analise }}</strong> curso{{ 's' if n.cursos_analise != 1 }} para revisar {{ ic("seta") }}
+    </a>
+  {% endif %}
+</div>
+{% endif %}
+
+<div class="kpis">
+  <div class="kpi destaque"><small>Receita da plataforma</small><strong>{{ (n.comissao + n.receita_planos)|reais }}</strong><span>comissões + planos</span></div>
+  <div class="kpi"><small>Planos de vendedores</small><strong>{{ n.receita_planos|reais }}</strong><span>{{ n.vendedores_ativos }} vendedor{{ 'es' if n.vendedores_ativos != 1 }} ativo{{ 's' if n.vendedores_ativos != 1 }}</span></div>
+  <div class="kpi"><small>Comissões</small><strong>{{ n.comissao|reais }}</strong><span>{{ n.vendas }} venda{{ 's' if n.vendas != 1 }} de cursos</span></div>
+  <div class="kpi"><small>Alunos</small><strong>{{ n.alunos }}</strong></div>
+</div>
+
+<section class="painel-card">
+  <div class="painel-card-topo"><h2>Vendas recentes</h2><a href="{{ url_for('admin.vendas') }}" class="link-seta">Ver todas {{ ic("seta") }}</a></div>
+  {% if recentes %}
+    <div class="tabela-wrap">
+      <table class="tabela">
+        <thead><tr><th>Data</th><th>Aluno</th><th>Curso</th><th>Empresa</th><th class="num">Valor</th><th class="num">Comissão</th></tr></thead>
+        <tbody>
+          {% for v in recentes %}
+            <tr><td>{{ v.criado_em|data }}</td><td>{{ v.aluno_nome }}</td><td>{{ v.titulo }}</td><td>{{ v.empresa_nome }}</td><td class="num">{{ v.valor|reais }}</td><td class="num forte">{{ v.comissao|reais }}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="estado-vazio"><strong>Nenhuma venda ainda</strong></div>
+  {% endif %}
+</section>
+{% endblock %}

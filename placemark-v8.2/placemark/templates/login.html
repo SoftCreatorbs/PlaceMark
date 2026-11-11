@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block titulo %}Entrar{% endblock %}
+{% block main_class %}auth{% endblock %}
+{% block conteudo %}
+<div class="auth-grade">
+  {% include "_auth_lado.html" %}
+  <section class="auth-form">
+    <h1>Bem-vindo de volta</h1>
+    <p class="sub">Alunos e empresas entram por aqui. Não tem conta? <a href="{{ url_for('auth.cadastro', proximo=request.args.get('proximo')) }}">Criar conta</a></p>
+    <form method="post">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="campo">
+        <label for="email">E-mail</label>
+        <input id="email" name="email" type="email" required autocomplete="email" autofocus placeholder="voce@email.com">
+      </div>
+      <div class="campo">
+        <label for="senha">Senha</label>
+        <div class="campo-senha">
+          <input id="senha" name="senha" type="password" required autocomplete="current-password" placeholder="Sua senha">
+          <button type="button" class="olho" data-olho="senha" aria-label="Mostrar senha"><svg class="ic" aria-hidden="true"><use href="#i-olho"></use></svg></button>
+        </div>
+      </div>
+      <button class="btn btn-escuro btn-cheio">Entrar</button>
+    </form>
+  </section>
+</div>
+{% endblock %}

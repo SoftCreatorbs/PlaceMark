@@ -1,0 +1,51 @@
+{% extends "admin/_base.html" %}
+{% from "_macros.html" import selo, filtros %}
+{% block titulo %}Cursos · Admin{% endblock %}
+{% block painel %}
+<header class="painel-cabecalho"><div><h1>Cursos</h1><p>Revise antes de publicar no catálogo.</p></div></header>
+{{ filtros('admin.cursos', status, [('em_analise', 'Em análise'), ('publicado', 'Publicados'), ('rejeitado', 'Rejeitados'), ('rascunho', 'Rascunhos'), ('todos', 'Todos')]) }}
+
+{% if cursos %}
+  <div class="lista-linhas">
+    {% for c in cursos %}
+      <article class="linha tom-{{ tom(c.id) }}">
+        <span class="monograma">{{ iniciais(c.titulo) }}</span>
+        <div class="linha-info">
+          <div class="linha-titulo"><strong>{{ c.titulo }}</strong>{{ selo(c.status) }}</div>
+          <small>
+            {{ c.empresa_nome }} · {{ c.categoria }} · {{ c.total_aulas }} aula{{ 's' if c.total_aulas != 1 }}
+            {% if c.preco_mensal %} · {{ c.preco_mensal|reais }}/mês{% endif %}
+            {% if c.preco_vitalicio %} · {{ c.preco_vitalicio|reais }} vitalício{% endif %}
+          </small>
+          {% if c.motivo_rejeicao %}<p class="motivo">Motivo: {{ c.motivo_rejeicao }}</p>{% endif %}
+        </div>
+        <div class="linha-acoes">
+          <a href="{{ url_for('curso', curso_id=c.id) }}" class="btn btn-contorno btn-peq">Ver</a>
+          {% if c.status == 'em_analise' %}
+            <form method="post" action="{{ url_for('admin.moderar_curso', curso_id=c.id) }}" class="inline">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button name="acao" value="aprovar" class="btn btn-escuro btn-peq">Publicar</button>
+            </form>
+            <details class="rejeitar">
+              <summary class="btn btn-contorno btn-peq">Rejeitar</summary>
+              <form method="post" action="{{ url_for('admin.moderar_curso', curso_id=c.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input name="motivo" placeholder="Motivo (a empresa vai ver)" required>
+                <button name="acao" value="rejeitar" class="btn btn-escuro btn-peq">Confirmar</button>
+              </form>
+            </details>
+          {% elif c.status == 'publicado' %}
+            <form method="post" action="{{ url_for('admin.moderar_curso', curso_id=c.id) }}" class="inline" data-confirmar>
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <input type="hidden" name="acao" value="despublicar">
+              <button class="btn btn-contorno perigo btn-peq">Despublicar</button>
+            </form>
+          {% endif %}
+        </div>
+      </article>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="estado-vazio"><strong>Nada por aqui</strong><p>Nenhum curso com esse status.</p></div>
+{% endif %}
+{% endblock %}

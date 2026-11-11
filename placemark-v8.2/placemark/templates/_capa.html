@@ -1,0 +1,9 @@
+{# Capa gerada para cada curso: cor + padrão próprios, sem imagens prontas.
+   Precisa de: item (curso), tamanho ('' ou 'banner') #}
+{% set padroes = ['pontos', 'linhas', 'ondas', 'grade'] %}
+<div class="capa tom-{{ tom(item.id) }} padrao-{{ padroes[(item.id * 7) % 4] }} {{ tamanho or '' }}" aria-hidden="true">
+  <span class="capa-forma f1"></span>
+  <span class="capa-forma f2"></span>
+  <span class="capa-sigla">{{ iniciais(item.titulo) }}</span>
+  <span class="capa-categoria">{{ item.categoria }}</span>
+</div>

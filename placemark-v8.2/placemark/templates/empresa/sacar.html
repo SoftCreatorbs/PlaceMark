@@ -1,0 +1,434 @@
+{% extends "empresa/_base.html" %}
+{% from "_macros.html" import selo %}
+{% block titulo %}Financeiro{% endblock %}
+{% block painel %}
+{% set pode_sacar = carteira and not g.empresa.oficial %}
+<header class="painel-cabecalho">
+  <div><h1>Financeiro</h1><p>{{ 'Seu saldo, seus ganhos e seus saques.' if pode_sacar else 'Seus ganhos com as vendas.' }}</p></div>
+</header>
+
+{# ---------- Saldo ---------- #}
+<div class="saldo-card">
+  <div class="saldo-info">
+    {% if pode_sacar %}
+      <small>Disponível para saque</small>
+      <strong>{{ saldo.disponivel|reais }}</strong>
+      <span>{% if saldo.disponivel < 0 %}saldo negativo por estorno: é descontado das próximas vendas{% else %}já sem a comissão de {{ comissao }}%{% endif %}</span>
+    {% else %}
+      <small>Vendas acumuladas</small>
+      <strong>{{ saldo.creditado|reais }}</strong>
+      <span>{{ 'loja oficial: cai direto na conta da Placemark' if g.empresa.oficial else 'cai direto na sua conta Mercado Pago' }}</span>
+    {% endif %}
+  </div>
+  {% if pode_sacar %}
+  <div class="saldo-extra">
+    <div><small>A liberar</small><b>{{ saldo.a_liberar|reais }}</b></div>
+    <div><small>Saque em andamento</small><b>{{ saldo.em_andamento|reais }}</b></div>
+  </div>
+  <a href="#sacar" class="btn btn-saldo">{{ ic('seta') }} Sacar</a>
+  {% endif %}
+</div>
+
+{# ---------- Números ---------- #}
+<div class="kpis">
+  <div class="kpi"><small>Vendas acumuladas</small><strong>{{ saldo.bruto|reais }}</strong><span>{{ saldo.vendas }} venda{{ 's' if saldo.vendas != 1 }} paga{{ 's' if saldo.vendas != 1 }}</span></div>
+  <div class="kpi"><small>Comissão Placemark</small><strong>{{ saldo.comissao|reais }}</strong><span>{{ comissao }}% por venda</span></div>
+  <div class="kpi destaque"><small>Você ganhou</small><strong>{{ saldo.creditado|reais }}</strong><span>vendas menos a comissão</span></div>
+  <div class="kpi"><small>Já sacado</small><strong>{{ saldo.recebido|reais }}</strong><span>{% if saldo.taxas %}+ {{ saldo.taxas|reais }} em taxas de saque{% else %}caiu no seu Pix{% endif %}</span></div>
+</div>
+
+{# ---------- Gráfico de ganhos ---------- #}
+<section class="painel-card grafico-card">
+  <div class="painel-card-topo">
+    <div>
+      <h2>Seus ganhos</h2>
+      <p class="grafico-total"><b data-total>—</b> <span data-total-rotulo>nos últimos 30 dias</span></p>
+    </div>
+    <div class="alternador" role="tablist" aria-label="Período do gráfico">
+      <button type="button" role="tab" aria-selected="true" data-periodo="dias">30 dias</button>
+      <button type="button" role="tab" aria-selected="false" data-periodo="meses">12 meses</button>
+    </div>
+  </div>
+  <div class="grafico" data-grafico>
+    <svg role="img" aria-label="Ganhos por período" preserveAspectRatio="none"></svg>
+    <div class="grafico-dica" role="status" hidden></div>
+  </div>
+  <p class="ajuda">Valores que ficam com você, já sem a comissão. Passe o mouse (ou toque) nas barras para ver cada dia.</p>
+</section>
+
+{# ---------- Sacar ---------- #}
+<section class="painel-card" id="sacar">
+  {% if g.empresa.oficial %}
+    <h2>Loja oficial</h2>
+    <p>As vendas da loja oficial caem direto na conta Mercado Pago da Placemark. Não existe saque aqui: o dinheiro já está na conta da empresa.</p>
+
+  {% elif not carteira %}
+    <h2>Seu dinheiro já está na sua conta Mercado Pago</h2>
+    <p>Cada venda cai automaticamente na conta Mercado Pago que você conectou. Para sacar, abra o app do Mercado Pago, toque em <b>Transferir</b> e envie por Pix.</p>
+    <a href="https://www.mercadopago.com.br/home" target="_blank" rel="noopener noreferrer" class="btn btn-escuro">Abrir Mercado Pago {{ ic('seta') }}</a>
+
+  {% elif not conectado %}
+    <div class="aviso-conta-mp">
+      <span class="marcador-grande">{{ ic('escudo') }}</span>
+      <div>
+        <h2 class="subtitulo pequeno">Conecte sua conta Mercado Pago para sacar</h2>
+        <p>Por segurança, o saque só é liberado com a sua conta Mercado Pago conectada. O Pix vai para uma chave no <b>mesmo CPF ou CNPJ</b> dessa conta, então ninguém consegue desviar o seu dinheiro.{% if saldo.disponivel > 0 %} Você tem <b>{{ saldo.disponivel|reais }}</b> esperando.{% endif %}</p>
+      </div>
+    </div>
+    <ol class="lista-passos">
+      <li>Ainda não tem conta? Crie grátis no app ou no site do <b>Mercado Pago</b>, com o mesmo CPF ou CNPJ do seu cadastro.</li>
+      <li>Toque em <b>Conectar Mercado Pago</b>, entre na sua conta e autorize a Placemark.</li>
+      <li>Volte aqui, escolha o valor e confirme o saque com a sua senha.</li>
+    </ol>
+    {% if oauth_pronto %}
+      <form method="post" action="{{ url_for('mp.conectar') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="btn btn-escuro">Conectar Mercado Pago</button>
+      </form>
+      <p class="ajuda">A Placemark nunca vê a sua senha do Mercado Pago. Você pode desconectar quando quiser.{% if teste %} (Modo teste ativo.){% endif %}</p>
+    {% else %}
+      <p class="ajuda">A conexão com o Mercado Pago está sendo ativada pela Placemark. Seu saldo continua guardado e o botão para conectar aparece aqui em breve.</p>
+    {% endif %}
+
+  {% elif em_andamento %}
+    {% set s = em_andamento %}
+    <div class="saque-andamento">
+      <span class="marcador-grande">{{ ic('relogio') }}</span>
+      <div>
+        <h2 class="subtitulo pequeno">Saque de {{ s.valor_liquido|reais }} {{ 'na fila' if s.status == 'solicitado' else 'a caminho' }}</h2>
+        <p>{% if s.status == 'processando' %}O Mercado Pago está processando o Pix para a sua chave {{ tipos_chave.get(s.pix_tipo, s.pix_tipo) }} {{ mascarar_chave(s.pix_tipo, s.pix_chave) }}. Costuma levar poucos minutos.
+           {% else %}A equipe Placemark vai fazer o Pix para a sua chave {{ tipos_chave.get(s.pix_tipo, s.pix_tipo) }} {{ mascarar_chave(s.pix_tipo, s.pix_chave) }} em até 1 dia útil.{% endif %}</p>
+        <div class="acoes-linha">
+          <form method="post" action="{{ url_for('saque.atualizar_meu', saque_id=s.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="btn btn-contorno btn-peq">Atualizar situação</button>
+          </form>
+          {% if s.status == 'solicitado' and not s.mp_transacao_id and (s.envio == 'manual' or s.tentativas == 0) %}
+          <form method="post" action="{{ url_for('saque.cancelar_meu', saque_id=s.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="link-discreto">Cancelar e devolver ao saldo</button>
+          </form>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+  {% else %}
+    {% set chave_salva = g.empresa.pix_chave or titular_doc or '' %}
+    {% set tipo_salvo = g.empresa.pix_tipo or titular_tipo or 'CPF' %}
+    <div class="painel-card-topo">
+      <h2>Sacar por Pix</h2>
+      <span class="conta-mp">{{ ic('check') }} Mercado Pago conectado{% if g.empresa.mp_nome %}: {{ g.empresa.mp_nome }}{% endif %}</span>
+    </div>
+
+    {% if saldo.disponivel < minimo %}
+      <div class="estado-vazio saque-vazio">
+        <strong>{{ 'Ainda não dá para sacar' if saldo.disponivel <= 0 else 'Falta pouco para o saque mínimo' }}</strong>
+        <p>O saque mínimo é de {{ minimo|reais }}.
+          {% if saldo.a_liberar %}Você tem {{ saldo.a_liberar|reais }} a liberar{% if saldo.proxima_liberacao %}; a próxima parte fica disponível em {{ saldo.proxima_liberacao|data }}{% endif %}.{% endif %}
+          Cada venda fica disponível {{ saldo.dias_liberacao }} dia{{ 's' if saldo.dias_liberacao != 1 }} depois de paga.</p>
+      </div>
+    {% else %}
+    <form method="post" action="{{ url_for('saque.solicitar') }}" class="form-saque" data-form-saque
+          data-disponivel="{{ saldo.disponivel }}" data-minimo="{{ minimo }}" data-taxa-fixa="{{ taxa_fixa }}" data-taxa-pct="{{ taxa_pct }}"
+          data-doc-tipo="{{ titular_tipo or '' }}" data-doc="{{ titular_doc or '' }}" data-email="{{ g.empresa.mp_email or '' }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="saque-grade">
+        <div>
+          <div class="campo">
+            <label for="valor">Quanto você quer sacar?</label>
+            <div class="campo-preco campo-valor"><span>R$</span><input id="valor" name="valor" inputmode="decimal" autocomplete="off" required value="{{ '%.2f'|format(saldo.disponivel / 100)|replace('.', ',') }}"></div>
+            <div class="atalhos-valor">
+              <button type="button" data-pct="25">25%</button>
+              <button type="button" data-pct="50">50%</button>
+              <button type="button" data-pct="100">Tudo</button>
+            </div>
+          </div>
+          <div class="campos-duplos">
+            <div class="campo">
+              <label for="pix_tipo">Tipo da chave Pix</label>
+              <select id="pix_tipo" name="pix_tipo">
+                {% for valor, rotulo in tipos_chave.items() %}<option value="{{ valor }}" {{ 'selected' if valor == tipo_salvo }}>{{ rotulo }}</option>{% endfor %}
+              </select>
+            </div>
+            <div class="campo">
+              <label for="pix_chave">Chave Pix</label>
+              <input id="pix_chave" name="pix_chave" required autocomplete="off" value="{{ chave_salva }}">
+            </div>
+          </div>
+          <small class="ajuda">A chave precisa estar cadastrada no mesmo {{ titular_tipo or 'CPF/CNPJ' }} da sua conta Mercado Pago{% if titular_doc %} ({{ mascarar_chave(titular_tipo, titular_doc) }}){% endif %}.</small>
+          <div class="campo campo-espaco">
+            <label for="senha">Sua senha da Placemark</label>
+            <input id="senha" name="senha" type="password" required autocomplete="current-password">
+            <small class="ajuda">Confirmamos a senha em todo saque, para ninguém sacar pela sua sessão aberta.</small>
+          </div>
+        </div>
+
+        <aside class="recibo" aria-live="polite">
+          <small>Resumo do saque</small>
+          <dl>
+            <div><dt>Valor do saque</dt><dd data-r-valor>—</dd></div>
+            <div><dt>Taxa de saque{% if taxa_pct %} ({{ taxa_fixa|reais }} + {{ '%g'|format(taxa_pct)|replace('.', ',') }}%){% endif %}</dt><dd data-r-taxa>—</dd></div>
+            <div class="recibo-total"><dt>Você recebe no Pix</dt><dd data-r-liquido>—</dd></div>
+          </dl>
+          <p class="recibo-erro" data-r-erro hidden></p>
+          <button class="btn btn-saldo btn-cheio" data-r-botao>{{ ic('seta') }} Confirmar saque</button>
+          <small class="recibo-nota">{{ 'O Pix sai na hora pelo Mercado Pago.' if automatico else 'A equipe Placemark faz o Pix em até 1 dia útil.' }} Fica no saldo: {{ (saldo.disponivel)|reais }} menos o valor sacado.</small>
+        </aside>
+      </div>
+    </form>
+    {% endif %}
+    <form method="post" action="{{ url_for('mp.desconectar') }}" class="form-desconectar">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button class="link-discreto">Desconectar conta Mercado Pago</button>
+    </form>
+  {% endif %}
+</section>
+
+{# ---------- Como funciona ---------- #}
+{% if pode_sacar %}
+<section class="painel-card">
+  <h2>Como o seu dinheiro chega até você</h2>
+  <ol class="linha-tempo">
+    <li><b>Venda paga</b><span>O aluno paga pelo Mercado Pago e o valor fica guardado na conta da Placemark.</span></li>
+    <li><b>A liberar ({{ saldo.dias_liberacao }} dia{{ 's' if saldo.dias_liberacao != 1 }})</b><span>Prazo de segurança contra estornos e contestações de cartão.</span></li>
+    <li><b>Disponível</b><span>Sua parte, já sem a comissão de {{ comissao }}%, entra no saldo.</span></li>
+    <li><b>Pix</b><span>Você saca quando quiser. A taxa de saque ({{ taxa_fixa|reais }}{% if taxa_pct %} + {{ '%g'|format(taxa_pct)|replace('.', ',') }}%{% endif %}) já sai descontada.</span></li>
+  </ol>
+</section>
+{% endif %}
+
+{# ---------- Extrato de saques ---------- #}
+{% if pode_sacar %}
+<section class="painel-card">
+  <h2>Saques</h2>
+  {% if saques %}
+    <div class="tabela-wrap">
+      <table class="tabela">
+        <thead><tr><th>Data</th><th>Chave Pix</th><th>Status</th><th class="num">Saque</th><th class="num">Taxa</th><th class="num">Você recebeu</th></tr></thead>
+        <tbody>
+          {% for s in saques %}
+            <tr>
+              <td>{{ s.criado_em|data }}</td>
+              <td>{{ tipos_chave.get(s.pix_tipo, s.pix_tipo) }} {{ mascarar_chave(s.pix_tipo, s.pix_chave) }}</td>
+              <td>{{ selo(s.status) }}{% if s.status == 'falhou' and s.erro %}<small class="erro-linha">{{ s.erro[:140] }}</small>{% endif %}</td>
+              <td class="num">{{ s.valor|reais }}</td>
+              <td class="num suave">{{ s.taxa|reais }}</td>
+              <td class="num forte">{{ s.valor_liquido|reais if s.status == 'pago' else '—' }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="estado-vazio"><strong>Nenhum saque ainda</strong><p>Quando você sacar, cada Pix aparece aqui.</p></div>
+  {% endif %}
+</section>
+{% endif %}
+
+<section class="painel-card">
+  <div class="painel-card-topo">
+    <h2>Últimas vendas</h2>
+    <a href="{{ url_for('empresa.vendas') }}" class="link-seta">Ver todas {{ ic("seta") }}</a>
+  </div>
+  {% if vendas_recentes %}
+    <div class="tabela-wrap">
+      <table class="tabela">
+        <thead><tr><th>Data</th><th>Curso</th><th>Status</th><th class="num">Venda</th><th class="num">Você recebe</th>{% if pode_sacar %}<th>Disponível em</th>{% endif %}</tr></thead>
+        <tbody>
+          {% for v in vendas_recentes %}
+            <tr>
+              <td>{{ v.pago_em|data }}</td><td>{{ v.titulo }}</td><td>{{ selo(v.status) }}</td>
+              <td class="num">{{ v.valor|reais }}</td><td class="num forte">{{ v.valor_empresa|reais }}</td>
+              {% if pode_sacar %}<td class="suave">{% if v.status != 'pago' %}—{% elif v.mp_conta != 'placemark' %}na sua conta MP{% else %}<span data-liberacao="{{ v.pago_em }}"></span>{% endif %}</td>{% endif %}
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="estado-vazio"><strong>Nenhuma venda ainda</strong><p>As vendas aparecem aqui assim que forem pagas.</p></div>
+  {% endif %}
+</section>
+
+<script nonce="{{ csp_nonce() }}">
+(function () {
+  "use strict";
+  var series = {{ series|tojson }};
+  var diasLiberacao = {{ saldo.dias_liberacao }};
+  var reais = function (c) {
+    return (c / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+  };
+
+  /* ---------- Quando cada venda fica disponível ---------- */
+  document.querySelectorAll("[data-liberacao]").forEach(function (el) {
+    var t = el.getAttribute("data-liberacao").replace(" ", "T");
+    var d = new Date(t);
+    if (isNaN(d)) return;
+    d.setDate(d.getDate() + diasLiberacao);
+    el.textContent = d <= new Date() ? "Disponível" : d.toLocaleDateString("pt-BR");
+  });
+
+  /* ---------- Gráfico de barras (uma série, dica ao passar o mouse) ---------- */
+  var caixa = document.querySelector("[data-grafico]");
+  if (caixa) {
+    var svg = caixa.querySelector("svg");
+    var dica = caixa.querySelector(".grafico-dica");
+    var totalEl = document.querySelector("[data-total]");
+    var totalRotulo = document.querySelector("[data-total-rotulo]");
+    var NS = "http://www.w3.org/2000/svg";
+    var periodo = "dias";
+
+    var el = function (nome, attrs) {
+      var n = document.createElementNS(NS, nome);
+      for (var k in attrs) n.setAttribute(k, attrs[k]);
+      return n;
+    };
+    var teto = function (v) {
+      if (v <= 0) return 10000;
+      var p = Math.pow(10, Math.floor(Math.log10(v)));
+      var passos = [1, 2, 2.5, 5, 10];
+      for (var i = 0; i < passos.length; i++) if (passos[i] * p >= v) return passos[i] * p;
+      return 10 * p;
+    };
+    var curto = function (c) {
+      var r = c / 100;
+      if (r >= 1000) return "R$ " + (r / 1000).toLocaleString("pt-BR", { maximumFractionDigits: 1 }) + " mil";
+      return "R$ " + Math.round(r).toLocaleString("pt-BR");
+    };
+
+    var desenhar = function () {
+      var dados = series[periodo];
+      var L = caixa.clientWidth || 600, A = 220;
+      var esq = 64, dir = 8, topo = 12, base = 26;
+      var w = L - esq - dir, h = A - topo - base;
+      svg.setAttribute("viewBox", "0 0 " + L + " " + A);
+      svg.setAttribute("width", L);
+      svg.setAttribute("height", A);
+      while (svg.firstChild) svg.removeChild(svg.firstChild);
+
+      var maximo = teto(Math.max.apply(null, dados.map(function (d) { return d.valor; })));
+      var total = dados.reduce(function (s, d) { return s + d.valor; }, 0);
+      totalEl.textContent = reais(total);
+      totalRotulo.textContent = periodo === "dias" ? "nos últimos 30 dias" : "nos últimos 12 meses";
+
+      for (var g = 0; g <= 2; g++) {
+        var y = topo + h - (h * g) / 2;
+        svg.appendChild(el("line", { x1: esq, x2: L - dir, y1: y, y2: y, class: g === 0 ? "eixo" : "grade" }));
+        var t = el("text", { x: esq - 8, y: y + 4, "text-anchor": "end", class: "rotulo" });
+        t.textContent = curto((maximo * g) / 2);
+        svg.appendChild(t);
+      }
+
+      var faixa = w / dados.length;
+      var larg = Math.max(2, Math.min(28, faixa - 2));
+      var passoRotulo = periodo === "dias" ? (L < 520 ? 10 : 5) : (L < 520 ? 3 : 1);
+      dados.forEach(function (d, i) {
+        var x = esq + i * faixa + (faixa - larg) / 2;
+        var bh = d.valor > 0 ? Math.max(3, (d.valor / maximo) * h) : 0;
+        var y = topo + h - bh;
+        var r = Math.min(4, larg / 2, bh);
+        if (bh > 0) {
+          var caminho = "M" + x + "," + (topo + h) + "V" + (y + r) + "Q" + x + "," + y + " " + (x + r) + "," + y +
+            "H" + (x + larg - r) + "Q" + (x + larg) + "," + y + " " + (x + larg) + "," + (y + r) + "V" + (topo + h) + "Z";
+          svg.appendChild(el("path", { d: caminho, class: "barra", "data-i": i }));
+        }
+        var alvo = el("rect", { x: esq + i * faixa, y: topo, width: faixa, height: h, class: "alvo", "data-i": i, tabindex: 0 });
+        alvo.setAttribute("aria-label", d.rotulo + ": " + reais(d.valor) + ", " + d.vendas + " venda(s)");
+        svg.appendChild(alvo);
+        if (i % passoRotulo === 0 || (periodo === "dias" && i === dados.length - 1 && L >= 520)) {
+          var tx = el("text", { x: esq + i * faixa + faixa / 2, y: A - 8, "text-anchor": "middle", class: "rotulo" });
+          tx.textContent = d.rotulo;
+          svg.appendChild(tx);
+        }
+      });
+    };
+
+    var mostrar = function (alvo) {
+      var i = +alvo.getAttribute("data-i");
+      var d = series[periodo][i];
+      svg.querySelectorAll(".barra.ativa").forEach(function (b) { b.classList.remove("ativa"); });
+      var barra = svg.querySelector('.barra[data-i="' + i + '"]');
+      if (barra) barra.classList.add("ativa");
+      dica.innerHTML = "<small>" + d.rotulo + "</small><b>" + reais(d.valor) + "</b><span>" + d.vendas + (d.vendas === 1 ? " venda" : " vendas") + "</span>";
+      dica.hidden = false;
+      var caixaR = caixa.getBoundingClientRect(), r = alvo.getBoundingClientRect();
+      var x = r.left - caixaR.left + r.width / 2;
+      x = Math.max(dica.offsetWidth / 2, Math.min(caixaR.width - dica.offsetWidth / 2, x));
+      dica.style.left = x + "px";
+    };
+    var esconder = function () {
+      dica.hidden = true;
+      svg.querySelectorAll(".barra.ativa").forEach(function (b) { b.classList.remove("ativa"); });
+    };
+    svg.addEventListener("pointerover", function (e) { if (e.target.classList.contains("alvo")) mostrar(e.target); });
+    svg.addEventListener("focusin", function (e) { if (e.target.classList.contains("alvo")) mostrar(e.target); });
+    svg.addEventListener("pointerleave", esconder);
+    svg.addEventListener("focusout", esconder);
+
+    document.querySelectorAll("[data-periodo]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        periodo = b.getAttribute("data-periodo");
+        document.querySelectorAll("[data-periodo]").forEach(function (o) { o.setAttribute("aria-selected", o === b ? "true" : "false"); });
+        esconder();
+        desenhar();
+      });
+    });
+    var espera;
+    window.addEventListener("resize", function () { clearTimeout(espera); espera = setTimeout(desenhar, 120); });
+    desenhar();
+  }
+
+  /* ---------- Formulário de saque: taxa e valor líquido ao vivo ---------- */
+  var form = document.querySelector("[data-form-saque]");
+  if (form) {
+    var disponivel = +form.dataset.disponivel, minimo = +form.dataset.minimo;
+    var taxaFixa = +form.dataset.taxaFixa, taxaPct = +form.dataset.taxaPct;
+    var campo = form.querySelector("#valor");
+    var tipo = form.querySelector("#pix_tipo"), chave = form.querySelector("#pix_chave");
+    var r = function (n) { return form.querySelector("[data-r-" + n + "]"); };
+
+    var lerValor = function () {
+      var t = campo.value.replace(/[^\d,.]/g, "");
+      if (t.indexOf(",") >= 0) t = t.replace(/\./g, "").replace(",", ".");
+      var v = Math.round(parseFloat(t) * 100);
+      return isNaN(v) ? 0 : v;
+    };
+    var atualizar = function () {
+      var v = lerValor();
+      var taxa = taxaFixa + Math.round(v * taxaPct / 100);
+      var liquido = v - taxa;
+      var erro = "";
+      if (v > disponivel) erro = "Mais do que o seu saldo disponível (" + reais(disponivel) + ").";
+      else if (v < minimo) erro = "O saque mínimo é de " + reais(minimo) + ".";
+      else if (liquido <= 0) erro = "O valor não cobre a taxa de saque.";
+      r("valor").textContent = reais(v);
+      r("taxa").textContent = "− " + reais(taxa);
+      r("liquido").textContent = reais(Math.max(0, liquido));
+      r("erro").textContent = erro;
+      r("erro").hidden = !erro;
+      r("botao").disabled = !!erro;
+    };
+    campo.addEventListener("input", atualizar);
+    form.querySelectorAll("[data-pct]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var v = Math.floor(disponivel * (+b.dataset.pct) / 100);
+        campo.value = (v / 100).toFixed(2).replace(".", ",");
+        atualizar();
+      });
+    });
+    // Ao trocar o tipo, sugere a chave do titular da conta Mercado Pago
+    tipo.addEventListener("change", function () {
+      if (tipo.value === form.dataset.docTipo && form.dataset.doc) chave.value = form.dataset.doc;
+      else if (tipo.value === "EMAIL" && form.dataset.email) chave.value = form.dataset.email;
+      else chave.value = "";
+      chave.placeholder = { CPF: "000.000.000-00", CNPJ: "00.000.000/0000-00", EMAIL: "voce@email.com",
+        PHONE: "(11) 91234-5678", PIX_CODE: "123e4567-e89b-12d3-a456-426614174000" }[tipo.value] || "";
+      chave.focus();
+    });
+    form.addEventListener("submit", function () { r("botao").disabled = true; r("botao").textContent = "Enviando…"; });
+    atualizar();
+  }
+})();
+</script>
+{% endblock %}

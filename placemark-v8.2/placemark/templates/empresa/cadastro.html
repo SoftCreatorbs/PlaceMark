@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block titulo %}Começar a vender{% endblock %}
+{% block main_class %}auth{% endblock %}
+{% block conteudo %}
+<div class="auth-grade">
+  {% set lado_empresa = True %}
+  {% include "_auth_lado.html" %}
+  <section class="auth-form">
+    <h1>Começar a vender</h1>
+    <p class="sub">Empresa ou pessoa física. Depois do cadastro, nossa equipe analisa e libera seu painel. Já tem conta? <a href="{{ url_for('auth.login') }}">Entrar</a></p>
+    <form method="post" novalidate>
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <p class="grupo-titulo">Como você vai aparecer para os alunos</p>
+      <div class="campo">
+        <label for="nome_fantasia">Nome da loja</label>
+        <input id="nome_fantasia" name="nome_fantasia" value="{{ dados.nome_fantasia }}" required placeholder="Nome da empresa ou seu nome profissional">
+      </div>
+      <div class="campo">
+        <label for="documento">CNPJ ou CPF</label>
+        <input id="documento" name="documento" value="{{ dados.documento }}" required inputmode="numeric" placeholder="CNPJ ou CPF, só números">
+      </div>
+      <div class="campo">
+        <label for="descricao">Sobre você ou sua empresa <span class="opcional">opcional</span></label>
+        <textarea id="descricao" name="descricao" rows="3" placeholder="Que tipo de curso vocês ensinam?">{{ dados.descricao }}</textarea>
+      </div>
+      <p class="grupo-titulo">Responsável pela conta</p>
+      {% set rotulo_nome = 'Nome do responsável' %}
+      {% include "_campos_conta.html" %}
+      <button class="btn btn-escuro btn-cheio">Enviar cadastro</button>
+      <p class="nota">Depois da aprovação, você escolhe um plano a partir de {{ preco_minimo|reais }}/mês.</p>
+    </form>
+  </section>
+</div>
+{% endblock %}

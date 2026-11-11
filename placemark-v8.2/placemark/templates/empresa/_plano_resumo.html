@@ -1,0 +1,23 @@
+{# Faixa com a situação do plano do vendedor #}
+{% if g.empresa.oficial %}
+  <div class="faixa-plano oficial">
+    <div><strong>Loja oficial Placemark</strong><span>Cursos ilimitados, publicados sem análise e sem mensalidade.</span></div>
+  </div>
+{% elif g.plano %}
+  {% set limite = g.plano.limite_cursos %}
+  <div class="faixa-plano">
+    <div>
+      <strong>Plano {{ g.plano.nome }}</strong>
+      <span>{{ g.vagas_usadas }} de {{ limite if limite else '∞' }} curso{{ 's' if limite != 1 }} à venda · renova em {{ g.plano.dias_restantes }} dia{{ 's' if g.plano.dias_restantes != 1 }}</span>
+    </div>
+    {% if limite %}
+      <div class="barra-vagas" aria-hidden="true"><span style="width: {{ [100, (g.vagas_usadas / limite * 100)|round]|min }}%"></span></div>
+    {% endif %}
+    <a href="{{ url_for('empresa.plano') }}" class="btn btn-contorno btn-peq">{{ 'Fazer upgrade' if limite and g.vagas_usadas >= limite else 'Gerenciar' }}</a>
+  </div>
+{% else %}
+  <div class="faixa-plano alerta-plano">
+    <div><strong>Você ainda não tem um plano ativo</strong><span>Você pode criar cursos à vontade, mas só consegue colocá-los à venda com um plano.</span></div>
+    <a href="{{ url_for('empresa.plano') }}" class="btn btn-escuro btn-peq">Ver planos</a>
+  </div>
+{% endif %}

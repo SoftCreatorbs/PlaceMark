@@ -1,0 +1,62 @@
+{% extends "admin/_base.html" %}
+{% from "_macros.html" import selo %}
+{% block titulo %}Vendas · Admin{% if planos %}
+<section class="painel-card">
+  <h2>Pagamentos de planos</h2>
+  <div class="tabela-wrap">
+    <table class="tabela">
+      <thead><tr><th>Data</th><th>Vendedor</th><th>Plano</th><th>Pagamento</th><th class="num">Valor</th></tr></thead>
+      <tbody>
+        {% for p in planos %}
+          <tr><td>{{ p.criado_em|data }}</td><td>{{ p.empresa_nome }}</td><td>{{ p.plano_nome }}</td><td>{{ p.metodo|metodo }}</td><td class="num forte">{{ p.valor|reais }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endif %}
+{% endblock %}
+{% block painel %}
+<header class="painel-cabecalho"><div><h1>Vendas</h1><p>Cursos vendidos e planos pagos pelos vendedores.</p></div></header>
+<div class="kpis">
+  <div class="kpi"><small>Vendas de cursos</small><strong>{{ totais.valor|reais }}</strong></div>
+  <div class="kpi"><small>Planos (vendedores)</small><strong>{{ total_planos|reais }}</strong></div>
+  <div class="kpi destaque"><small>Comissões (plataforma)</small><strong>{{ totais.comissao|reais }}</strong></div>
+  <div class="kpi"><small>Repasse às empresas</small><strong>{{ totais.empresas|reais }}</strong></div>
+</div>
+<section class="painel-card">
+  <h2>Vendas de cursos</h2>
+  {% if vendas %}
+    <div class="tabela-wrap">
+      <table class="tabela">
+        <thead><tr><th>#</th><th>Data</th><th>Aluno</th><th>Curso</th><th>Empresa</th><th>Plano</th><th>Status</th><th class="num">Valor</th><th class="num">Comissão</th><th class="num">Repasse</th></tr></thead>
+        <tbody>
+          {% for v in vendas %}
+            <tr>
+              <td class="suave">{{ v.id }}</td><td>{{ v.criado_em|data }}</td><td>{{ v.aluno_nome }}</td><td>{{ v.titulo }}</td><td>{{ v.empresa_nome }}</td>
+              <td>{{ selo(v.plano) }}</td><td>{{ selo(v.status) }}</td><td class="num">{{ v.valor|reais }}</td><td class="num forte">{{ v.comissao|reais }}</td><td class="num">{{ v.valor_empresa|reais }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="estado-vazio"><strong>Nenhuma venda ainda</strong></div>
+  {% endif %}
+</section>
+{% if planos %}
+<section class="painel-card">
+  <h2>Pagamentos de planos</h2>
+  <div class="tabela-wrap">
+    <table class="tabela">
+      <thead><tr><th>Data</th><th>Vendedor</th><th>Plano</th><th>Pagamento</th><th class="num">Valor</th></tr></thead>
+      <tbody>
+        {% for p in planos %}
+          <tr><td>{{ p.criado_em|data }}</td><td>{{ p.empresa_nome }}</td><td>{{ p.plano_nome }}</td><td>{{ p.metodo|metodo }}</td><td class="num forte">{{ p.valor|reais }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endif %}
+{% endblock %}

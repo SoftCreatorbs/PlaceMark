@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block main_class %}container conteudo{% endblock %}
+{% block conteudo %}
+<div class="painel-layout">
+  <aside class="lateral">
+    <div class="lateral-titulo">
+      <span class="sobre">{% block area %}{% endblock %}</span>
+      <strong>{% block area_nome %}{% endblock %}</strong>
+    </div>
+    <nav class="lateral-menu">{% block menu_lateral %}{% endblock %}</nav>
+  </aside>
+  <section class="painel-conteudo">
+    {% block painel %}{% endblock %}
+  </section>
+</div>
+{% endblock %}

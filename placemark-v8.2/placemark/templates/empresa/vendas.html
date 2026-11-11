@@ -1,0 +1,26 @@
+{% extends "empresa/_base.html" %}
+{% from "_macros.html" import selo %}
+{% block titulo %}Vendas{% endblock %}
+{% block painel %}
+<header class="painel-cabecalho"><div><h1>Vendas</h1><p>{{ vendas|length }} venda{{ 's' if vendas|length != 1 }} no total</p></div></header>
+<section class="painel-card">
+  {% if vendas %}
+    <div class="tabela-wrap">
+      <table class="tabela">
+        <thead><tr><th>Data</th><th>Aluno</th><th>Curso</th><th>Plano</th><th>Pagamento</th><th>Status</th><th class="num">Valor</th><th class="num">Comissão</th><th class="num">Você recebe</th></tr></thead>
+        <tbody>
+          {% for v in vendas %}
+            <tr>
+              <td>{{ v.criado_em|data }}</td><td>{{ v.aluno_nome }}</td><td>{{ v.titulo }}</td><td>{{ selo(v.plano) }}</td>
+              <td>{{ v.metodo|metodo }}</td><td>{{ selo(v.status) }}</td>
+              <td class="num">{{ v.valor|reais }}</td><td class="num suave">−{{ v.comissao|reais }}</td><td class="num forte">{{ v.valor_empresa|reais }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="estado-vazio"><strong>Nenhuma venda ainda</strong><p>Quando um aluno comprar, a venda aparece aqui.</p></div>
+  {% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,50 @@
+{% extends "empresa/_base.html" %}
+{% block titulo %}Meu plano{% endblock %}
+{% block painel %}
+<header class="painel-cabecalho">
+  <div><h1>Planos para vender</h1><p>O plano define quantos cursos você pode ter à venda. Além do plano, a plataforma cobra uma comissão por venda.</p></div>
+</header>
+
+{% include "empresa/_plano_resumo.html" %}
+
+<div class="grade-planos">
+  {% for p in planos %}
+    {% set atual = g.plano and g.plano.id == p.id %}
+    {% set nao_cabe = p.limite_cursos and g.vagas_usadas > p.limite_cursos %}
+    <article class="card-plano {{ 'atual' if atual }} {{ 'popular' if loop.index == 2 and not atual }}">
+      {% if atual %}<span class="fita">Seu plano</span>{% elif loop.index == 2 %}<span class="fita">Mais escolhido</span>{% endif %}
+      <h2>{{ p.nome }}</h2>
+      <p class="card-plano-desc">{{ p.descricao }}</p>
+      <div class="card-plano-preco">{{ p.preco_mensal|reais }}<small>/mês</small></div>
+      <ul class="checks">
+        <li><strong>{{ p.limite_cursos if p.limite_cursos else 'Ilimitados' }}</strong>&nbsp;curso{{ 's' if p.limite_cursos != 1 }} à venda</li>
+        <li>Venda mensal e vitalícia</li>
+        <li>Painel de vendas e alunos</li>
+      </ul>
+      {% if nao_cabe %}
+        <button class="btn btn-contorno btn-cheio" disabled title="Você tem mais cursos à venda do que este plano permite">Não comporta</button>
+      {% elif atual %}
+        <a href="{{ url_for('carrinho_plano', plano_id=p.id) if p.checkout_url else url_for('empresa.assinar_plano', plano_id=p.id) }}" class="btn btn-contorno btn-cheio">Renovar +30 dias</a>
+      {% else %}
+        <a href="{{ url_for('carrinho_plano', plano_id=p.id) if p.checkout_url else url_for('empresa.assinar_plano', plano_id=p.id) }}" class="btn btn-escuro btn-cheio">{{ 'Trocar para ' ~ p.nome if g.plano else 'Assinar ' ~ p.nome }}</a>
+      {% endif %}
+    </article>
+  {% endfor %}
+</div>
+
+{% if historico %}
+<section class="secao-tabela">
+  <h2 class="subtitulo">Pagamentos do plano</h2>
+  <div class="tabela-wrap">
+    <table class="tabela">
+      <thead><tr><th>Data</th><th>Plano</th><th>Pagamento</th><th class="num">Valor</th></tr></thead>
+      <tbody>
+        {% for h in historico %}
+          <tr><td>{{ h.criado_em|data }}</td><td>{{ h.nome }}</td><td>{{ h.metodo|metodo }}</td><td class="num">{{ h.valor|reais }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endif %}
+{% endblock %}

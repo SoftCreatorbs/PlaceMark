@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block titulo %}Erro {{ erro.code }}{% endblock %}
+{% block conteudo %}
+<div class="erro-pagina">
+  <span class="erro-codigo">{{ erro.code }}</span>
+  <h1>
+    {% if erro.code == 404 %}Página não encontrada
+    {% elif erro.code == 403 %}Acesso negado
+    {% else %}Algo deu errado{% endif %}
+  </h1>
+  <p>
+    {% if erro.code == 404 %}O endereço pode ter mudado ou não existe.
+    {% elif erro.code == 403 %}Você não tem permissão para ver esta página.
+    {% else %}{{ erro.description }}{% endif %}
+  </p>
+  <a href="{{ url_for('inicio') }}" class="btn btn-escuro">Voltar ao início</a>
+</div>
+{% endblock %}
