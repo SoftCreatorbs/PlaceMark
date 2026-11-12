@@ -180,7 +180,7 @@ def create_app():
     @app.route("/vender")
     def vender():
         planos = db.get_db().execute("SELECT * FROM planos_vendedor WHERE ativo = 1 ORDER BY ordem, preco_mensal").fetchall()
-        return render_template("vender.html", comissao=db.config("comissao_percentual", "10"), planos=planos)
+        return render_template("vender.html", comissao=db.config("comissao_percentual", "7"), planos=planos)
 
     # ---------- Carrinho de plano do vendedor -> checkout Kiwify ----------
     @app.route("/carrinho/plano/<int:plano_id>")
@@ -192,7 +192,7 @@ def create_app():
         outros = conexao.execute(
             "SELECT * FROM planos_vendedor WHERE ativo = 1 AND id != ? ORDER BY ordem, preco_mensal", (plano_id,)).fetchall()
         return render_template("carrinho.html", plano=plano, outros=outros,
-                               comissao=db.config("comissao_percentual", "10"))
+                               comissao=db.config("comissao_percentual", "7"))
 
     @app.route("/carrinho/plano/<int:plano_id>/comprar")
     def comprar_plano(plano_id):

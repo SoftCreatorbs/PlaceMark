@@ -146,7 +146,7 @@ CREATE TABLE configuracoes (
     valor  TEXT NOT NULL
 );
 
-INSERT INTO configuracoes (chave, valor) VALUES ('comissao_percentual', '10');
+INSERT INTO configuracoes (chave, valor) VALUES ('comissao_percentual', '7');
 
 INSERT INTO planos_vendedor (nome, preco_mensal, limite_cursos, descricao, ordem) VALUES
  ('Standard', 5000, 1, 'Para começar: 1 curso à venda.', 1),

@@ -366,7 +366,7 @@ def painel():
     return render_template(
         "empresa/sacar.html", saldo=saldo(eid), series=series_vendas(eid), saques=saques,
         vendas_recentes=vendas_recentes, carteira=mp.modo_carteira(), conectado=bool(g.empresa["mp_user_id"]),
-        oauth_pronto=mp.oauth_pronto(), teste=mp.modo_teste(), comissao=db.config("comissao_percentual", "10"),
+        oauth_pronto=mp.oauth_pronto(), teste=mp.modo_teste(), comissao=db.config("comissao_percentual", "7"),
         taxa_fixa=regra_int("saque_taxa_fixa"), taxa_pct=taxa_percentual(), minimo=regra_int("saque_minimo"),
         tipos_chave=TIPOS_CHAVE, titular_tipo=tipo_doc, titular_doc=doc, mascarar_chave=mascarar_chave,
         em_andamento=next((s for s in saques if s["status"] in EM_ANDAMENTO), None),

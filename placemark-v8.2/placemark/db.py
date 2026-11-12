@@ -163,7 +163,14 @@ def _m4_carteira_saques(con):
     con.executescript(SAQUES_SQL)
 
 
-MIGRACOES = [_m1_checkout_url, _m2_seguranca, _m3_mercado_pago, _m4_carteira_saques]
+def _m5_comissao_7(con):
+    """Comissão padrão da Placemark passa de 10% para 7%. Roda uma vez só (pela versão do banco):
+    se o admin mudar a comissão depois, a escolha dele fica valendo."""
+    if con.execute("PRAGMA user_version").fetchone()[0] < 5:
+        con.execute("UPDATE configuracoes SET valor = '7' WHERE chave = 'comissao_percentual' AND valor = '10'")
+
+
+MIGRACOES = [_m1_checkout_url, _m2_seguranca, _m3_mercado_pago, _m4_carteira_saques, _m5_comissao_7]
 
 
 def preparar_banco(app):

@@ -1,5 +1,5 @@
 {% from "_icones.html" import sprite %}<!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-tema="escuro">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -9,6 +9,15 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
   <meta name="theme-color" content="#080b16">
+  <script nonce="{{ csp_nonce() }}">
+    // Aplica o tema salvo antes de desenhar a página (evita piscar escuro antes do claro)
+    (function () {
+      var t = null;
+      try { t = localStorage.getItem('placemark-tema'); } catch (e) {}
+      if (t === 'claro' || t === 'escuro') document.documentElement.dataset.tema = t;
+      if (t === 'claro') document.querySelector('meta[name=theme-color]').content = '#ffffff';
+    })();
+  </script>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
@@ -27,6 +36,9 @@
         </form>
       {% endif %}
       <nav class="menu">
+        <button type="button" class="botao-tema" data-tema-botao aria-label="Mudar para o tema claro" title="Tema claro">
+          <svg class="ic" aria-hidden="true"><use href="#i-sol"/></svg>
+        </button>
         {% if ep == 'instalar' %}
           <span class="menu-link">Instalação</span>
         {% elif not g.usuario %}
@@ -113,6 +125,28 @@
         if (!f.dataset.ok) { e.preventDefault(); f.dataset.ok = '1'; f.querySelector('button').textContent = 'Clique de novo para confirmar'; }
       });
     });
+    // Tema claro / escuro: troca na hora e lembra a escolha neste navegador
+    (function () {
+      var raiz = document.documentElement, meta = document.querySelector('meta[name=theme-color]');
+      function mostrar() {
+        var claro = raiz.dataset.tema === 'claro';
+        document.querySelectorAll('[data-tema-botao]').forEach(function (b) {
+          b.querySelector('use').setAttribute('href', claro ? '#i-lua' : '#i-sol');
+          b.setAttribute('aria-label', claro ? 'Mudar para o tema escuro' : 'Mudar para o tema claro');
+          b.title = claro ? 'Tema escuro' : 'Tema claro';
+        });
+        meta.content = claro ? '#ffffff' : '#080b16';
+      }
+      document.querySelectorAll('[data-tema-botao]').forEach(function (b) {
+        b.addEventListener('click', function () {
+          raiz.dataset.tema = raiz.dataset.tema === 'claro' ? 'escuro' : 'claro';
+          try { localStorage.setItem('placemark-tema', raiz.dataset.tema); } catch (e) {}
+          mostrar();
+        });
+      });
+      mostrar();
+    })();
+
     setTimeout(function () {
       document.querySelectorAll('.alerta-sucesso').forEach(function (a) { a.classList.add('saindo'); });
     }, 5000);

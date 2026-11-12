@@ -76,7 +76,7 @@ def checkout(curso_id, plano):
         if modo == "indisponivel":
             flash("Este vendedor ainda não ativou os pagamentos. Tente novamente mais tarde.", "erro")
             return redirect(url_for("curso", curso_id=curso_id))
-        pct = int(db.config("comissao_percentual", "10"))
+        pct = int(db.config("comissao_percentual", "7"))
         comissao = round(valor * pct / 100)
 
         if modo == "real":

@@ -3,7 +3,7 @@
 Visual escuro no estilo marketplace. A logo (pino) e o ícone ficam em `static/marca/` (SVG e PNG).
 
 Qualquer pessoa ou empresa pode vender cursos (assinatura mensal ou acesso vitalício). Para isso, o vendedor
-paga um **plano mensal** que define quantos cursos pode ter à venda, mais uma **comissão por venda** (10% por padrão).
+paga um **plano mensal** que define quantos cursos pode ter à venda, mais uma **comissão por venda** (7% por padrão).
 Alunos compram e assistem. A equipe Placemark modera tudo pelo painel de admin e vende os próprios cursos na **Loja oficial**.
 
 ## Planos dos vendedores (o admin pode editar em Admin → Planos)

@@ -30,7 +30,7 @@ def dashboard():
            FROM pedidos p JOIN cursos cu ON cu.id = p.curso_id JOIN usuarios u ON u.id = p.aluno_id
            JOIN empresas e ON e.id = p.empresa_id ORDER BY p.id DESC LIMIT 6""").fetchall()
     return render_template("admin/dashboard.html", n=numeros, recentes=recentes,
-                           comissao_pct=db.config("comissao_percentual", "10"))
+                           comissao_pct=db.config("comissao_percentual", "7"))
 
 
 # ---------- Empresas ----------
@@ -201,7 +201,7 @@ def config():
             seguranca.registrar("comissao_alterada", f"{pct}%")
             flash(f"Comissão atualizada para {pct}%. Vale para as próximas vendas.", "sucesso")
             return redirect(url_for("admin.config"))
-    return render_template("admin/config.html", comissao=db.config("comissao_percentual", "10"))
+    return render_template("admin/config.html", comissao=db.config("comissao_percentual", "7"))
 
 
 # ---------- Planos dos vendedores ----------

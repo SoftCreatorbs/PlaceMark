@@ -1456,3 +1456,137 @@ tr.linha-alerta td:nth-child(3) { color: var(--rosa); }
 .opcoes-radio b { display: block; color: var(--titulo); font-size: .9rem; }
 .opcoes-radio small { color: var(--suave); font-size: .8rem; }
 @media (max-width: 640px) { .regras-grade { grid-template-columns: minmax(0, 1fr); } }
+
+/* ---------- Botão de tema (sol / lua) ---------- */
+.botao-tema {
+  display: grid; place-items: center; width: 38px; height: 38px; padding: 0; margin-right: .2rem; flex-shrink: 0;
+  border-radius: 50%; border: 1px solid var(--linha); background: var(--superficie); color: var(--titulo); cursor: pointer;
+  transition: transform 160ms var(--ease-out), border-color 150ms ease, background-color 150ms ease;
+}
+.botao-tema .ic { width: 18px; height: 18px; }
+.botao-tema:active { transform: scale(0.92); }
+.botao-tema:focus-visible { outline: 2px solid var(--tinta); outline-offset: 2px; }
+@media (hover: hover) and (pointer: fine) { .botao-tema:hover { border-color: var(--destaque); } }
+
+/* =====================================================================
+   v9 — TEMA CLARO (branco com detalhes roxos e verde-limão)
+   Liga com <html data-tema="claro">. O escuro continua sendo o padrão.
+   ===================================================================== */
+html[data-tema="claro"] {
+  color-scheme: light;
+  --fundo: #f6f7fb;
+  --fundo-2: #eff1f7;
+  --superficie: #ffffff;
+  --superficie-2: #f4f5fa;
+  --linha: #e4e6ef;
+  --linha-forte: #cdd1e1;
+  --texto: #3a4060;
+  --suave: #666d8f;
+  --titulo: #0d1126;
+  --tinta: #5b4bff;
+  --tinta-hover: #4a39ef;
+  --destaque: #4c3ce6;
+  --marca-texto: #c6f432;
+  --limao-texto: #4d7c0f;
+
+  --indigo: #4c3ce6;  --indigo-claro: #efedff;
+  --verde: #047857;   --verde-claro: #e3f5ec;
+  --ambar: #b45309;   --ambar-claro: #fdf1df;
+  --rosa: #be185d;    --rosa-claro: #fde8f1;
+  --cinza: #4b5563;   --cinza-claro: #eff0f4;
+  --sombra: 0 1px 2px rgba(13, 17, 38, .05), 0 12px 30px -16px rgba(13, 17, 38, .18);
+}
+[data-tema="claro"] ::selection { background: rgba(91, 75, 255, .22); color: var(--titulo); }
+
+/* Topo e botões */
+[data-tema="claro"] .topo { background: rgba(255, 255, 255, .86); }
+[data-tema="claro"] .menu-link.ativo { background: rgba(13, 17, 38, .06); }
+[data-tema="claro"] .btn-escuro { box-shadow: 0 8px 22px -12px rgba(91, 75, 255, .7); }
+[data-tema="claro"] .aba.ativa { border-color: var(--tinta); }
+@media (hover: hover) and (pointer: fine) {
+  [data-tema="claro"] .card-curso:hover { box-shadow: 0 22px 44px -24px rgba(13, 17, 38, .28); }
+  [data-tema="claro"] .chip-filtro:hover { background: rgba(91, 75, 255, .16); }
+}
+
+/* Destaques em verde-limão viram roxo ou verde escuro (limão some no branco) */
+[data-tema="claro"] mark, [data-tema="claro"] .hero mark { color: var(--tinta); }
+[data-tema="claro"] .sobre.claro, [data-tema="claro"] .catalogo-topo .sobre { color: var(--tinta); }
+[data-tema="claro"] .selo-limao { background: rgba(132, 204, 22, .16); color: var(--limao-texto); }
+[data-tema="claro"] .recibo .recibo-total dd { color: var(--verde); }
+[data-tema="claro"] .grafico .barra.ativa { fill: #65a30d; }
+[data-tema="claro"] .grafico .alvo:focus-visible { fill: rgba(13, 17, 38, .05); }
+
+/* Painéis em destaque: branco com brilho roxo suave */
+[data-tema="claro"] .passos, [data-tema="claro"] .faixa-empresa,
+[data-tema="claro"] .catalogo-topo, [data-tema="claro"] .auth-lado {
+  background: radial-gradient(120% 140% at 100% 0%, rgba(91, 75, 255, .14) 0%, transparent 55%), linear-gradient(160deg, #ffffff 0%, #f2f0ff 100%);
+  border: 1px solid var(--linha); color: var(--suave);
+}
+[data-tema="claro"] .passo h3, [data-tema="claro"] .faixa-empresa h2, [data-tema="claro"] .catalogo-topo h1,
+[data-tema="claro"] .auth-lado h2, [data-tema="claro"] .logo.claro .logo-nome { color: var(--titulo); }
+[data-tema="claro"] .passo p { color: var(--suave); }
+[data-tema="claro"] .auth-lado::after { background: radial-gradient(circle, rgba(91, 75, 255, .18), transparent 70%); }
+[data-tema="claro"] .catalogo-topo::before { background: rgba(91, 75, 255, .2); }
+[data-tema="claro"] .catalogo-topo::after { background: rgba(198, 244, 50, .4); }
+[data-tema="claro"] .checks.claro { border-top-color: var(--linha); color: var(--texto); }
+[data-tema="claro"] .busca-grande input { background: #fff; border-color: var(--linha-forte); }
+[data-tema="claro"] .busca-grande input:focus { border-color: var(--tinta); box-shadow: 0 0 0 5px rgba(91, 75, 255, .15); }
+[data-tema="claro"] .faixa-plano.oficial { background: linear-gradient(150deg, #f2f0ff, #ffffff); border-color: var(--linha-forte); }
+[data-tema="claro"] .faixa-plano.oficial strong { color: var(--tinta); }
+[data-tema="claro"] .faixa-plano.oficial span { color: var(--suave); }
+
+/* Banner da home */
+[data-tema="claro"] .slide-1 { background: radial-gradient(90% 120% at 85% 20%, rgba(91, 75, 255, .2), transparent 60%), radial-gradient(60% 80% at 60% 110%, rgba(198, 244, 50, .28), transparent 70%), linear-gradient(160deg, #ffffff, #f3f1ff); }
+[data-tema="claro"] .slide-2 { background: radial-gradient(90% 120% at 90% 10%, rgba(209, 36, 111, .14), transparent 60%), linear-gradient(160deg, #ffffff, #fdf1f6); }
+[data-tema="claro"] .slide-3 { background: radial-gradient(90% 120% at 90% 0%, rgba(198, 244, 50, .32), transparent 55%), radial-gradient(70% 90% at 10% 120%, rgba(91, 75, 255, .16), transparent 70%), linear-gradient(160deg, #ffffff, #f6f9ec); }
+[data-tema="claro"] .orbita { border-color: rgba(13, 17, 38, .14); }
+[data-tema="claro"] .orbita.o2 { border-color: rgba(91, 75, 255, .25); }
+[data-tema="claro"] .mini-capa, [data-tema="claro"] .slide-arte .capa.destaque { box-shadow: 0 26px 50px -22px rgba(13, 17, 38, .45); }
+[data-tema="claro"] .painel-fake { background: rgba(255, 255, 255, .92); box-shadow: 0 26px 50px -22px rgba(13, 17, 38, .35); }
+[data-tema="claro"] .painel-fake strong { color: var(--tinta); }
+[data-tema="claro"] .barras span:last-child { background: linear-gradient(180deg, #a3e635, #65a30d); }
+[data-tema="claro"] .ponto { background: rgba(13, 17, 38, .18); }
+[data-tema="claro"] .ponto.ativo { background: var(--tinta); }
+[data-tema="claro"] .banner-seta { background: rgba(255, 255, 255, .8); }
+
+/* Categorias com cores mais fortes sobre branco */
+[data-tema="claro"] .categoria { --c: #5b4bff; --c-fundo: rgba(91, 75, 255, .1); }
+[data-tema="claro"] .categoria.cat-1 { --c: #047857; --c-fundo: rgba(4, 120, 87, .1); }
+[data-tema="claro"] .categoria.cat-2 { --c: #b45309; --c-fundo: rgba(180, 83, 9, .1); }
+[data-tema="claro"] .categoria.cat-3 { --c: #be185d; --c-fundo: rgba(190, 24, 93, .1); }
+
+/* Formulários */
+[data-tema="claro"] .campo input, [data-tema="claro"] .campo textarea,
+[data-tema="claro"] .campo select, [data-tema="claro"] .busca input { background: #fff; }
+[data-tema="claro"] .campo input::placeholder, [data-tema="claro"] .campo textarea::placeholder,
+[data-tema="claro"] .busca-grande input::placeholder, [data-tema="claro"] .busca-topo input::placeholder { color: #9298b3; }
+[data-tema="claro"] .busca-topo input { background: var(--fundo-2); border-color: transparent; }
+[data-tema="claro"] .busca-topo input:focus { background: #fff; border-color: var(--tinta); box-shadow: 0 0 0 4px rgba(91, 75, 255, .15); }
+[data-tema="claro"] .metodo:has(input:checked), [data-tema="claro"] .plano-opcao:has(input[type=checkbox]:checked) { background: rgba(91, 75, 255, .07); }
+[data-tema="claro"] .segmentado input:checked + span { background: #fff; }
+
+/* Avisos e alertas */
+[data-tema="claro"] .alerta { box-shadow: 0 12px 30px -16px rgba(13, 17, 38, .25); }
+[data-tema="claro"] .alerta-sucesso { background: #ecfdf3; color: #05603a; border-color: #c6f0d8; }
+[data-tema="claro"] .alerta-erro { background: #fef2f2; color: #a01d1d; border-color: #fbd5d5; }
+[data-tema="claro"] .alerta-aviso { background: #fffaeb; color: #93540a; border-color: #f5ddb0; }
+[data-tema="claro"] .faixa-plano.alerta-plano { border-color: #f5ddb0; }
+[data-tema="claro"] .aviso-email { color: #3b2fc9; }
+[data-tema="claro"] .aviso-conectar { border-color: rgba(101, 163, 13, .4); background: rgba(132, 204, 22, .1); }
+[data-tema="claro"] .checks li::before {
+  background: var(--verde-claro) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23047857' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5.5 12.5l4 4 9-9'/%3E%3C/svg%3E") center / 12px no-repeat;
+}
+[data-tema="claro"] .checks.claro li::before {
+  background: var(--marca-texto) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230b0f1e' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5.5 12.5l4 4 9-9'/%3E%3C/svg%3E") center / 12px no-repeat;
+}
+[data-tema="claro"] tr.inativo td { color: #a3a8c0; }
+[data-tema="claro"] dialog.gaveta { box-shadow: -30px 0 80px -30px rgba(13, 17, 38, .35); }
+[data-tema="claro"] dialog.gaveta::backdrop { background: rgba(13, 17, 38, .35); }
+
+/* Financeiro: o cartão roxo do saldo continua igual; o cartão simples fica branco */
+[data-tema="claro"] .saldo-card-simples { border-color: var(--linha); box-shadow: var(--sombra); }
+[data-tema="claro"] .saldo-card-simples .saldo-info small, [data-tema="claro"] .saldo-card-simples .saldo-info span,
+[data-tema="claro"] .saldo-card-simples .saldo-extra small { color: var(--suave); }
+[data-tema="claro"] .saldo-card-simples .saldo-info strong { color: var(--titulo); }
+[data-tema="claro"] .saldo-card-simples .saldo-extra b { color: var(--titulo); }
+[data-tema="claro"] .marcador-grande { background: rgba(132, 204, 22, .16); color: var(--limao-texto); }
